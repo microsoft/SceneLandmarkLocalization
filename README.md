@@ -1,3 +1,63 @@
+# Learning to Detect Scene Landmarks for Camera Localization
+
+This repository contains the source code and data for our paper:
+
+**Learning to Detect Scene Landmarks for Camera Localization**  
+Tien Do, Ondrej Miksik, Joseph DeGol, Hyun Soo Park, and Sudipta N. Sinha  
+IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), 2022  
+[dataset](https://drive.google.com/drive/folders/1nTAiDbQzhT3WI6Cvj0MdRv2MTcB0t3hw?usp=sharing) | [pdf](paper/FINAL.pdf) 
+
+# Bibtex
+If you find our work to be useful in your research, please consider citing our paper:
+```
+@InProceedings{Do_2022_SceneLandmarkLoc,
+    author     = {Do, Tien and Miksik, Ondrej and DeGol, Joseph, and Park, Hyun Soo and Sinha, Sudipta N.},
+    title      = {Learning to Detect Scene Landmarks for Camera Localization},
+    booktitle  = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+    month      = {June},
+    year       = {2022}
+}
+```
+
+# Abstract
+
+![teaser](media/teaser_wide.png)
+We present a new method to recognize scene-specific _scene landmarks_ to localize a camera, which preserves 
+privacy and achieves high accuracy. [Left] Scene landmark detections in a query image obtained from a 
+heatmap-based CNN architecture. [Middle] A visualization of the predicted heatmap scores. [Right] The 3D scene 
+landmarks (in red) and the estimated camera pose (in blue) are shown over the 3D point cloud (in gray). The 3D point 
+cloud is shown only for the purpose of visualization.
+
+# Indoor-6 dataset
+
+### Description
+Our Indoor-6 dataset was created from multiple sessions captured in six indoor scenes over multiple days. The pseudo 
+ground truth (pGT) 3D point clouds and camera poses for each scene are computed using [COLMAP](https://colmap.github.io/). The figure below 
+shows the camera poses (in red) and point clouds (in gray) and for each scene, the number of video and images in the 
+training and test split respectively. Compared to [7-scenes](https://www.microsoft.com/en-us/research/project/rgb-d-dataset-7-scenes/), the scenes in Indoor-6 are larger, have multiple rooms, 
+contains illumination variations as the images span multiple days and different times of day.
+
+![indoor6_sfm](media/indoor6_sfm.png)
+Indoor-6 dataset SfM reconstructions. We split them into train/test images. The urls for download these scenes are 
+below:
+* [scene1](???) (6289/799 images) [Coming soon]
+* [scene2](???) (3021/284 images) [Coming soon]
+* [scene3](???) (4181/315 images) [Coming soon]
+* [scene4](???) (1942/272 images) [Coming soon]
+* [scene5](https://drive.google.com/file/d/1mdlz-uc9D6eS7MJtjf_09Wof0PAoaqj4/view?usp=sharing) (4946/424 images)
+* [scene6](https://drive.google.com/file/d/1cuHbm_Sdy3hbUJLdFrYftguUUY_35bYc/view?usp=sharing) (1761/323 images)
+
+[comment]: <> (### Organization)
+
+
+# Code (coming soon)
+
+[comment]: <> (### Installation)
+
+[comment]: <> (### Training)
+
+[comment]: <> (### Evaluation)
+
 
 # Contributing
 
