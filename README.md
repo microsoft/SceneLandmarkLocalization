@@ -5,7 +5,19 @@ This repository contains the source code for our paper:
 **Learning to Detect Scene Landmarks for Camera Localization**  
 Tien Do, Ondrej Miksik, Joseph DeGol, Hyun Soo Park, and Sudipta N. Sinha  
 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), 2022  
-[dataset](???) | [pdf](???) 
+[dataset](https://drive.google.com/drive/folders/1nTAiDbQzhT3WI6Cvj0MdRv2MTcB0t3hw?usp=sharing) | [pdf](paper/FINAL.pdf) 
+
+# Bibtex
+If you find our work to be useful in your research, please consider citing our paper:
+```
+@InProceedings{Do_2022_SceneLandmarkLoc,
+    author     = {Do, Tien and Miksik, Ondrej and DeGol, Joseph, and Park, Hyun Soo and Sinha, Sudipta N.},
+    title      = {Learning to Detect Scene Landmarks for Camera Localization},
+    booktitle  = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+    month      = {June},
+    year       = {2022}
+}
+```
 
 # Abstract
 
@@ -28,12 +40,12 @@ contains illumination variations as the images span multiple days and different 
 ![indoor6_sfm](media/indoor6_sfm.png)
 Indoor-6 dataset SfM reconstructions. We split them into train/test images. The urls for download these scenes are 
 below:
-1. [scene1](???) (6289/799 images)
-2. [scene2](???) (3021/284 images) 
-3. [scene3](???) (4181/315 images) 
-4. [scene4](???) (1942/272 images) 
-5. [scene5](???) (4946/424 images) 
-6. [scene6](???) (1761/323 images)
+* [scene1](???) (6289/799 images) [Coming soon]
+* [scene2](???) (3021/284 images) [Coming soon]
+* [scene3](???) (4181/315 images) [Coming soon]
+* [scene4](???) (1942/272 images) [Coming soon]
+* [scene5](https://drive.google.com/file/d/1mdlz-uc9D6eS7MJtjf_09Wof0PAoaqj4/view?usp=sharing) (4946/424 images)
+* [scene6](https://drive.google.com/file/d/1cuHbm_Sdy3hbUJLdFrYftguUUY_35bYc/view?usp=sharing) (1761/323 images)
 
 ### Organization
 
@@ -46,18 +58,6 @@ below:
 
 [comment]: <> (### Evaluation)
 
-
-# Bibtex
-If you find our work to be useful in your research, please consider citing our paper:
-```
-@InProceedings{Do_2022_SceneLandmarkLoc,
-    author     = {Do, Tien and Miksik, Ondrej and DeGol, Joseph, and Park, Hyun Soo and Sinha, Sudipta N.},
-    title      = {Learning to Detect Scene Landmarks for Camera Localization},
-    booktitle  = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
-    month      = {June},
-    year       = {2022}
-}
-```
 
 # Contributing
 
