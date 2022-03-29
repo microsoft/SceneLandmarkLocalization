@@ -32,9 +32,9 @@ cloud is shown only for the purpose of visualization.
 
 ### Description
 Our Indoor-6 dataset was created from multiple sessions captured in six indoor scenes over multiple days. The pseudo 
-ground truth (pGT) 3D point clouds and camera poses for each scene are computed using COLMAP. The figure below shows 
-the camera poses (in red) and point clouds (in gray) and for each scene, the number of video and images in the 
-training and test split respectively. Compared to 7-scenes, the scenes in Indoor-6 are larger, have multiple rooms, 
+ground truth (pGT) 3D point clouds and camera poses for each scene are computed using [COLMAP](https://colmap.github.io/). The figure below 
+shows the camera poses (in red) and point clouds (in gray) and for each scene, the number of video and images in the 
+training and test split respectively. Compared to [7-scenes](https://www.microsoft.com/en-us/research/project/rgb-d-dataset-7-scenes/), the scenes in Indoor-6 are larger, have multiple rooms, 
 contains illumination variations as the images span multiple days and different times of day.
 
 ![indoor6_sfm](media/indoor6_sfm.png)
