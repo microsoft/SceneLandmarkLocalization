@@ -11,7 +11,7 @@ IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), 2022
 If you find our work to be useful in your research, please consider citing our paper:
 ```
 @InProceedings{Do_2022_SceneLandmarkLoc,
-    author     = {Do, Tien and Miksik, Ondrej and DeGol, Joseph, and Park, Hyun Soo and Sinha, Sudipta N.},
+    author     = {Do, Tien and Miksik, Ondrej and DeGol, Joseph and Park, Hyun Soo and Sinha, Sudipta N.},
     title      = {Learning to Detect Scene Landmarks for Camera Localization},
     booktitle  = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
     month      = {June},
