@@ -1,6 +1,6 @@
 # Learning to Detect Scene Landmarks for Camera Localization
 
-This repository contains the source code for our paper:
+This repository contains the source code and data for our paper:
 
 **Learning to Detect Scene Landmarks for Camera Localization**  
 Tien Do, Ondrej Miksik, Joseph DeGol, Hyun Soo Park, and Sudipta N. Sinha  
@@ -47,7 +47,7 @@ below:
 * [scene5](https://drive.google.com/file/d/1mdlz-uc9D6eS7MJtjf_09Wof0PAoaqj4/view?usp=sharing) (4946/424 images)
 * [scene6](https://drive.google.com/file/d/1cuHbm_Sdy3hbUJLdFrYftguUUY_35bYc/view?usp=sharing) (1761/323 images)
 
-### Organization
+[comment]: <> (### Organization)
 
 
 # Code (coming soon)
