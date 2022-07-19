@@ -30,12 +30,7 @@ cloud is shown only for the purpose of visualization.
 
 # Video
 
-<iframe
-    src="https://www.youtube.com/embed/HM2yLCLz5nY"
-    frameborder="0"
-    allow="autoplay; encrypted-media"
-    allowfullscreen> </iframe>
-
+[![Everything Is AWESOME](media/video_figure.png)](https://www.youtube.com/watch?v=HM2yLCLz5nY "Everything Is AWESOME")
 
 # Indoor-6 dataset
 
