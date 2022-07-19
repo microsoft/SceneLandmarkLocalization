@@ -28,7 +28,7 @@ heatmap-based CNN architecture. [Middle] A visualization of the predicted heatma
 landmarks (in red) and the estimated camera pose (in blue) are shown over the 3D point cloud (in gray). The 3D point 
 cloud is shown only for the purpose of visualization.
 
-# Indoor-6 dataset
+[![Video](https://yt-embed.herokuapp.com/embed?v=HM2yLCLz5nY)]("Learning to detect Scene Landmarks for Camera Localization")
 
 ### Description
 Our Indoor-6 dataset was created from multiple sessions captured in six indoor scenes over multiple days. The pseudo 
@@ -40,7 +40,8 @@ contains illumination variations as the images span multiple days and different 
 ![indoor6_sfm](media/indoor6_sfm.png)
 Indoor-6 dataset SfM reconstructions. We split them into train/test images. The urls for download these scenes are 
 below:
-* [scene1](https://drive.google.com/file/d/1SJeaUJJsir4WqrV_4ZkYgVqhGwWeM0eZ/view?usp=sharing) (6289/799 images)
+* [scene1](https://drive.google.com/file/d/1SJeaUJJsir4WqrV_4ZkYgVqhGwWeM0eZ/view?usp=sharing) (6289/799 images), 
+  scale=0.79
 * [scene2](???) (3021/284 images) [Coming soon]
 * [scene3](https://drive.google.com/file/d/1wyJhQbzLEs0_Fhtrdegi1GxBkZlKiamn/view?usp=sharing) (4181/315 images)
 * [scene5](https://drive.google.com/file/d/1mdlz-uc9D6eS7MJtjf_09Wof0PAoaqj4/view?usp=sharing) (4946/424 images)
