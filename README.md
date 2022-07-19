@@ -28,6 +28,15 @@ heatmap-based CNN architecture. [Middle] A visualization of the predicted heatma
 landmarks (in red) and the estimated camera pose (in blue) are shown over the 3D point cloud (in gray). The 3D point 
 cloud is shown only for the purpose of visualization.
 
+# Video
+
+<iframe
+    src="https://www.youtube.com/embed/HM2yLCLz5nY"
+    frameborder="0"
+    allow="autoplay; encrypted-media"
+    allowfullscreen> </iframe>
+
+
 # Indoor-6 dataset
 
 ### Description
