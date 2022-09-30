@@ -45,15 +45,18 @@ contains illumination variations as the images span multiple days and different 
 Indoor-6 dataset SfM reconstructions. We split them into train/test images. The urls for download these scenes are 
 below:
 * [scene1](https://drive.google.com/file/d/1SJeaUJJsir4WqrV_4ZkYgVqhGwWeM0eZ/view?usp=sharing) (6289/799 images)
-* [scene2](???) (3021/284 images) [Coming soon]
+* [scene2] (3021/284 images) 
+* [scene2a] ()
 * [scene3](https://drive.google.com/file/d/1wyJhQbzLEs0_Fhtrdegi1GxBkZlKiamn/view?usp=sharing) (4181/315 images)
+* [scene4] (1947/227 images)
+* [scene4a] ()
 * [scene5](https://drive.google.com/file/d/1mdlz-uc9D6eS7MJtjf_09Wof0PAoaqj4/view?usp=sharing) (4946/424 images)
 * [scene6](https://drive.google.com/file/d/1cuHbm_Sdy3hbUJLdFrYftguUUY_35bYc/view?usp=sharing) (1761/323 images)
 
 [comment]: <> (### Organization)
 
 
-# Code (coming soon)
+# Code (plan to release on November 2022)
 
 [comment]: <> (### Installation)
 
