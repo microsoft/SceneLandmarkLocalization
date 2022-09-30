@@ -45,13 +45,18 @@ contains illumination variations as the images span multiple days and different 
 Indoor-6 dataset SfM reconstructions. We split them into train/test images. The urls for download these scenes are 
 below:
 * [scene1](https://drive.google.com/file/d/1SJeaUJJsir4WqrV_4ZkYgVqhGwWeM0eZ/view?usp=sharing) (6289/799 images)
-* [scene2] (3021/284 images) 
-* [scene2a] ()
+* scene2 (3021/284 images) 
+* [scene2a](https://drive.google.com/file/d/1_6ry9TTpruw6gOI5WJmiprI4l3gb-YN2/view?usp=sharing) (4890/257 images)
 * [scene3](https://drive.google.com/file/d/1wyJhQbzLEs0_Fhtrdegi1GxBkZlKiamn/view?usp=sharing) (4181/315 images)
-* [scene4] (1947/227 images)
-* [scene4a] ()
+* scene4 (1942/272 images)
+* [scene4a](https://drive.google.com/file/d/1ywLifH9-RAedjM-oCAR2CshHEinwawJz/view?usp=sharing) (2285/158 images)
 * [scene5](https://drive.google.com/file/d/1mdlz-uc9D6eS7MJtjf_09Wof0PAoaqj4/view?usp=sharing) (4946/424 images)
 * [scene6](https://drive.google.com/file/d/1cuHbm_Sdy3hbUJLdFrYftguUUY_35bYc/view?usp=sharing) (1761/323 images)
+
+**Note**: Due to the privacy concern, we could not release the original scene2 and scene4, thus we instead create two substitutions for them as scene2a and scene4a, respectively. Here are the updated results for the new scenes, note that scene2 and scene4 are replaced with scene2a and scene4a in the table (see Table 1 in our paper for the original version).
+
+![TableNew](media/table_new.png)
+Table 2: Previous table with new scenes scene2a and scene4a.
 
 [comment]: <> (### Organization)
 
