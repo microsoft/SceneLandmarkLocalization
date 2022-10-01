@@ -53,10 +53,11 @@ below:
 * [scene5](https://drive.google.com/file/d/1mdlz-uc9D6eS7MJtjf_09Wof0PAoaqj4/view?usp=sharing) (4946/424 images)
 * [scene6](https://drive.google.com/file/d/1cuHbm_Sdy3hbUJLdFrYftguUUY_35bYc/view?usp=sharing) (1761/323 images)
 
-**Note**: Due to the privacy concern, we could not release the original scene2 and scene4, thus we instead create two substitutions for them as scene2a and scene4a, respectively. Here are the updated results for the new scenes, note that scene2 and scene4 are replaced with scene2a and scene4a in the table (see Table 1 in our paper for the original version).
+**Note**: The table below shows quantitative results on two new scenes (scene2a and scene4a) that were added to the dataset after the paper was published. Unfortunately, we are unable to release scene2 and scene4 from the original dataset due to privacy reasons. Therefore, we have created these scenes as a replacement and released them.
+<p align="center">
+<img src="media/table_newscenes.png" alt="TableNew" style="width:600px;" />
+<p/>
 
-![TableNew](media/table_new.png)
-Table 2: Previous table with new scenes scene2a and scene4a.
 
 [comment]: <> (### Organization)
 
