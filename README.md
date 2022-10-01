@@ -30,7 +30,7 @@ cloud is shown only for the purpose of visualization.
 
 # Video
 
-[![Everything Is AWESOME](media/video_figure.png)](https://www.youtube.com/watch?v=HM2yLCLz5nY "Everything Is AWESOME")
+[![Video](media/video_figure.png)](https://www.youtube.com/watch?v=HM2yLCLz5nY)
 
 # Indoor-6 dataset
 
@@ -61,7 +61,7 @@ Table 2: Previous table with new scenes scene2a and scene4a.
 [comment]: <> (### Organization)
 
 
-# Code (plan to release on November 2022)
+# Code (plan to release in November 2022)
 
 [comment]: <> (### Installation)
 
