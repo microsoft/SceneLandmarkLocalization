@@ -28,6 +28,10 @@ heatmap-based CNN architecture. [Middle] A visualization of the predicted heatma
 landmarks (in red) and the estimated camera pose (in blue) are shown over the 3D point cloud (in gray). The 3D point 
 cloud is shown only for the purpose of visualization.
 
+# Video
+
+[![Video](media/video_figure.png)](https://www.youtube.com/watch?v=HM2yLCLz5nY)
+
 # Indoor-6 dataset
 
 ### Description
@@ -41,15 +45,24 @@ contains illumination variations as the images span multiple days and different 
 Indoor-6 dataset SfM reconstructions. We split them into train/test images. The urls for download these scenes are 
 below:
 * [scene1](https://drive.google.com/file/d/1SJeaUJJsir4WqrV_4ZkYgVqhGwWeM0eZ/view?usp=sharing) (6289/799 images)
-* [scene2](???) (3021/284 images) [Coming soon]
+* scene2 (3021/284 images) 
+* [scene2a](https://drive.google.com/file/d/1_6ry9TTpruw6gOI5WJmiprI4l3gb-YN2/view?usp=sharing) (4890/257 images)
 * [scene3](https://drive.google.com/file/d/1wyJhQbzLEs0_Fhtrdegi1GxBkZlKiamn/view?usp=sharing) (4181/315 images)
+* scene4 (1942/272 images)
+* [scene4a](https://drive.google.com/file/d/1ywLifH9-RAedjM-oCAR2CshHEinwawJz/view?usp=sharing) (2285/158 images)
 * [scene5](https://drive.google.com/file/d/1mdlz-uc9D6eS7MJtjf_09Wof0PAoaqj4/view?usp=sharing) (4946/424 images)
 * [scene6](https://drive.google.com/file/d/1cuHbm_Sdy3hbUJLdFrYftguUUY_35bYc/view?usp=sharing) (1761/323 images)
+
+**Note**: The table below shows quantitative results on two new scenes (scene2a and scene4a) that were added to the dataset after the paper was published. Unfortunately, we are unable to release scene2 and scene4 from the original dataset due to privacy reasons. Therefore, we have created these scenes as a replacement and released them.
+<p align="center">
+<img src="media/table_newscenes.png" alt="TableNew" style="width:600px;" />
+<p/>
+
 
 [comment]: <> (### Organization)
 
 
-# Code (coming soon)
+# Code (plan to release in November 2022)
 
 [comment]: <> (### Installation)
 
