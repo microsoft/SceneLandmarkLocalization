@@ -102,7 +102,7 @@ python main.py --action train --dataset_folder /dataset_directory/indoor6/ --sce
 python main.py --action train_patches --dataset_folder /dataset_directory/indoor6/ --scene_id scene1 --output_folder train_log_directory/
 ```
 
-*** Note that in the previous example codes, all the training output is stored at `train_log_directory/scene1/`. At each epoch, the latest model is kept at `train_log_directory/scene1/model-latest.ckpt`, and valuated on the validation set. The model with the lowest median angular error is stored at `train_log_directory/scene1/model-best_median.ckpt`  
+*** Note that in the previous example code, all the training output is stored at `train_log_directory/scene1/`. At each epoch, the latest model is kept at `train_log_directory/scene1/model-latest.ckpt`, and evaluated on the validation set. The model with the lowest median angular error is stored in `train_log_directory/scene1/model-best_median.ckpt`  
 
 ## Evaluate pretrained models
 

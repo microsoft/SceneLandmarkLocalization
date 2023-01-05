@@ -14,16 +14,16 @@ if __name__ == '__main__':
         help='Output folder')
     parser.add_argument(
         '--landmark_config', type=str, default='landmarks/landmarks-300',
-        help='Landmark configuration.')
+        help='File containing scene-specific 3D landmarks.')
     parser.add_argument(
         '--visibility_config', type=str, default='landmarks/visibility_aug-300',
-        help='Visibility configuration.')
+        help='File containing information about visibility of landmarks in cameras associated with training set.')
     parser.add_argument(
         '--scene_id', type=str, default='scene6',
         help='Scene id')
     parser.add_argument(
         '--model', type=str, default='efficientnet',
-        help='Detector model')
+        help='Network architecture backbone.')
     parser.add_argument(
         '--output_downsample', type=int, default=4,
         help='Down sampling factor for output resolution')
@@ -35,13 +35,13 @@ if __name__ == '__main__':
         help='Pretrained detector model')
     parser.add_argument(
         '--num_epochs', type=int, default=200,
-        help='number of training epochs')
+        help='Number of training epochs.')
     parser.add_argument(
         '--action', type=str, default='test',
         help='train/train_patches/test')
     parser.add_argument(
         '--training_batch_size', type=int, default=8,
-        help='Batch size using during training')
+        help='Batch size used during training.')
 
     opt = parser.parse_args()
 

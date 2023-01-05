@@ -120,8 +120,7 @@ def MeasureReprojectionSinglePose(z, b, p, w):
     t = z[:3]
 
     for j in range(n_projs):
-        X = p[3 * j:3 * (j + 1)]
-        # Remove measurement error of fixed poses
+        X = p[3 * j:3 * (j + 1)]        
         b_hat = R @ X + t
         f[3 * j: 3 * (j + 1)] = b_hat / np.sqrt(np.sum(b_hat ** 2))
         s[3 * j: 3 * (j + 1)] = w[j]
@@ -145,7 +144,23 @@ def UpdatePose(z):
 
 
 def P3PKe(m, X, inlier_thres=1e-5):
+    """
+    Perspective-3-point algorithm from
+    Ke, T., & Roumeliotis, S. I. (CVPR'17). An efficient algebraic solution to the perspective-three-point problem.     
 
+
+    Parameters
+    ----------
+    m : ndarray of shape (3, 4)
+        unit bearing vectors to each landmarks w.r.t camera
+    X : ndarray of shape (3, 4)
+        3D points position w.r.t global
+    Returns
+    -------
+    R : ndarray of shape (3, 3)
+    t : ndarray of shape (3, 1)
+        (R, t) represents transformation from global to camera frame of reference
+    """
     w1 = X[:, 0]
     w2 = X[:, 1]
     w3 = X[:, 2]
@@ -265,9 +280,7 @@ def P3PKe_Ransac(G_p_f, C_b_f_hm, w, thres=0.01):
 
     for iter in range(50):
 
-        ## uniform sampling based on weight factor
-        # min_set = np.argpartition(np.exp(w * np.random.randn(w.shape[0])), -Nsample)[-Nsample:]
-        # min_set = np.argpartition(w * np.random.rand(w.shape[0]), -Nsample)[-Nsample:]
+        # Sampling based on weight factor
         min_set = np.argpartition(np.exp(10.0 * w) * np.random.rand(w.shape[0]), -Nsample)[-Nsample:]
 
         C_R_G_hat, C_t_G_hat = P3PKe(C_b_f_hm[:, min_set], G_p_f[:, min_set], inlier_thres=thres)
@@ -279,8 +292,7 @@ def P3PKe_Ransac(G_p_f, C_b_f_hm, w, thres=0.01):
         C_b_f_hat = C_R_G_hat @ G_p_f + C_t_G_hat
         C_b_f_hat = C_b_f_hat / np.linalg.norm(C_b_f_hat, axis=0)
         inlier_mask = np.sum(C_b_f_hat * C_b_f_hm, axis=0) > (1.0 - inlier_thres)
-        inlier_score = np.sum(w[inlier_mask])
-        # inlier_score = np.sum(inlier_mask)
+        inlier_score = np.sum(w[inlier_mask])        
         if inlier_score > inlier_score_best:
             inlier_best = inlier_mask
             C_T_G_best = np.eye(4)
@@ -292,6 +304,12 @@ def P3PKe_Ransac(G_p_f, C_b_f_hm, w, thres=0.01):
 
 
 def RunPnPNL(C_T_G, G_p_f, C_b_f, w, cutoff=0.01):
+
+    '''
+    Weighted PnP based using weight w and bearing angular loss.
+    Return optimized P_new = optimized C_T_G.
+    '''
+    
 
     z0, b = SetupPnPNL(C_T_G, G_p_f, C_b_f)
     res = least_squares(
