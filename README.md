@@ -42,16 +42,16 @@ training and test split respectively. Compared to [7-scenes](https://www.microso
 contains illumination variations as the images span multiple days and different times of day.
 
 ![indoor6_sfm](media/indoor6_sfm.png)
-Indoor-6 dataset SfM reconstructions. We split them into train/test images. The urls for download these scenes are 
+Indoor-6 dataset SfM reconstructions. We split them into train/val/test images. The urls for download these scenes are 
 below:
-* [scene1](https://drive.google.com/file/d/1SJeaUJJsir4WqrV_4ZkYgVqhGwWeM0eZ/view?usp=sharing) (6289/799 images)
-* scene2 (3021/284 images) 
-* [scene2a](https://drive.google.com/file/d/1_6ry9TTpruw6gOI5WJmiprI4l3gb-YN2/view?usp=sharing) (4890/257 images)
-* [scene3](https://drive.google.com/file/d/1wyJhQbzLEs0_Fhtrdegi1GxBkZlKiamn/view?usp=sharing) (4181/315 images)
-* scene4 (1942/272 images)
-* [scene4a](https://drive.google.com/file/d/1ywLifH9-RAedjM-oCAR2CshHEinwawJz/view?usp=sharing) (2285/158 images)
-* [scene5](https://drive.google.com/file/d/1mdlz-uc9D6eS7MJtjf_09Wof0PAoaqj4/view?usp=sharing) (4946/424 images)
-* [scene6](https://drive.google.com/file/d/1cuHbm_Sdy3hbUJLdFrYftguUUY_35bYc/view?usp=sharing) (1761/323 images)
+* [scene1](https://drive.google.com/file/d/1SJeaUJJsir4WqrV_4ZkYgVqhGwWeM0eZ/view?usp=sharing) (6289/798/799 images)
+* scene2 (3021/283/284 images) 
+* [scene2a](https://drive.google.com/file/d/1_6ry9TTpruw6gOI5WJmiprI4l3gb-YN2/view?usp=sharing) (4890/256/257 images)
+* [scene3](https://drive.google.com/file/d/1wyJhQbzLEs0_Fhtrdegi1GxBkZlKiamn/view?usp=sharing) (4181/313/315 images)
+* scene4 (1942/272/272 images)
+* [scene4a](https://drive.google.com/file/d/1ywLifH9-RAedjM-oCAR2CshHEinwawJz/view?usp=sharing) (2285/158/158 images)
+* [scene5](https://drive.google.com/file/d/1mdlz-uc9D6eS7MJtjf_09Wof0PAoaqj4/view?usp=sharing) (4946/512/424 images)
+* [scene6](https://drive.google.com/file/d/1cuHbm_Sdy3hbUJLdFrYftguUUY_35bYc/view?usp=sharing) (1761/322/323 images)
 
 **Note**: The table below shows quantitative results on two new scenes (scene2a and scene4a) that were added to the dataset after the paper was published. Unfortunately, we are unable to release scene2 and scene4 from the original dataset due to privacy reasons. Therefore, we have created these scenes as a replacement and released them.
 <p align="center">
@@ -62,14 +62,77 @@ below:
 [comment]: <> (### Organization)
 
 
-# Code (plan to release in November 2022)
+# Code
 
-[comment]: <> (### Installation)
+The code is inside [src](./src/), make sure that you downloaded the newest version of the dataset that is compatible with the code. The code can be used to train the model from scratch and evaluate the pretrained models. Please refer to the following subsections for training a model or evaluating pretrained models. 
 
-[comment]: <> (### Training)
 
-[comment]: <> (### Evaluation)
+## Installation
+```
+pip install -r requirements.txt
+```
 
+
+## Training
+
+Download the indoor6 dataset using the links above and stored them under `dataset_directory/`, such as:
+
+```
+dataset_directory
+            └── indoor6
+                    ├── scene1
+                    └── scene2a
+                    └── scene3
+                    └── scene4a
+                    └── scene5
+                    └── scene6
+```
+
+
+There are two approaches to train the scene landmark detector for each scene. The first approach directly works on the full 2D input images. The second approach extract patches from the training images on-the-fly and then training a detector on these patches. The argument --action must be set to `train` or `train_patches` in order to use these two approaches respectively as follows:
+
+* Train using full images to obtain the scene landmark detector for `scene1`:
+```
+python main.py --action train --dataset_folder /dataset_directory/indoor6/ --scene_id scene1 --output_folder train_log_directory/
+```
+
+* Train using image patches to obtain the scene landmark detector for `scene1`:
+
+```
+python main.py --action train_patches --dataset_folder /dataset_directory/indoor6/ --scene_id scene1 --output_folder train_log_directory/
+```
+
+*** Note that in the previous example code, all the training output is stored at `train_log_directory/scene1/`. At each epoch, the latest model is kept at `train_log_directory/scene1/model-latest.ckpt`, and evaluated on the validation set. The model with the lowest median angular error is stored in `train_log_directory/scene1/model-best_median.ckpt`  
+
+## Evaluate pretrained models
+
+1. Download the pretrained models for all scenes [here](https://drive.google.com/file/d/1iRRgIvJJJH3IfTeBB2iC9mF5o8uJK3qR/view?usp=share_link) and put them under `pretrained_models_directory/` as:
+
+```
+    pretrained_models_directory
+                    ├── scene1.ckpt
+                    └── scene2a.ckpt
+                    └── scene3.ckpt
+                    └── scene4a.ckpt
+                    └── scene5.ckpt
+                    └── scene6.ckpt
+```
+
+2. Evaluation all pretrained models
+
+```
+python main.py --action test --dataset_folder /dataset_directory/indoor6/ --scene_id all --output_folder test_log_directory/ --pretrained_model pretrained_models_directory/
+```
+
+You should see the evaluation table at the end:
+
+![eval_table](media/pretrained_models_results.png)
+
+3. Evaluate a specific scene, for example `scene1`:
+
+```
+python main.py --action test --dataset_folder /dataset_directory/indoor6/ --scene_id scene1 --output_folder test_log_directory/scene1/ --pretrained_model pretrained_models_directory/scene1.ckpt`
+```
 
 # Contributing
 
