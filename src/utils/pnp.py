@@ -76,6 +76,7 @@ def Quaternion2Rotation(q):
     return R
 
 def skewsymm(x):
+    
     Sx = np.zeros((3, 3))
     Sx[0, 1] = -x[2]
     Sx[0, 2] = x[1]
@@ -87,31 +88,19 @@ def skewsymm(x):
     return Sx
 
 
-def SetupPnPNL(C_T_G, G_p_f, C_b_f):
-    n_points = G_p_f.shape[1]
-    n_projs = n_points
-    b = np.zeros((3 * n_projs,))
+def VectorizeInitialPose(C_T_G):
 
-    for k in range(n_points):
-        b[3 * k: 3 * (k + 1)] = C_b_f[:, k]
-
-    z = np.zeros((7 + 3 * n_points,))
     R = C_T_G[:3, :3]
     t = C_T_G[:3, 3]
     q = Rotation2Quaternion(R)
+    z = np.concatenate([t, q])
 
-    z[0:7] = np.concatenate([t, q])
-    for i in range(n_points):
-        z[7 + 3 * i: 7 + 3 * (i + 1)] = G_p_f[:, i]
-
-    return z, b
+    return z
 
 
-def MeasureReprojectionSinglePose(z, b, p, w):
+def MeasureReprojectionSinglePose(z, p, b, w):
 
-    n_projs = b.shape[0] // 3
-    f = np.zeros((3 * n_projs,))
-    s = 0.001 * np.ones((3 * n_projs,))
+    n_points = b.shape[1]
 
     q = z[3:7]
     q_norm = np.sqrt(np.sum(q ** 2))
@@ -119,15 +108,11 @@ def MeasureReprojectionSinglePose(z, b, p, w):
     R = Quaternion2Rotation(q)
     t = z[:3]
 
-    for j in range(n_projs):
-        X = p[3 * j:3 * (j + 1)]        
-        b_hat = R @ X + t
-        f[3 * j: 3 * (j + 1)] = b_hat / np.sqrt(np.sum(b_hat ** 2))
-        s[3 * j: 3 * (j + 1)] = w[j]
+    b_hat = R @ p + t.reshape(3, 1)
+    b_hat_normalized = b_hat / np.sqrt(np.sum(b_hat ** 2, axis=0))
+    err = np.repeat(w, 3).reshape(n_points, 3).T * (b_hat_normalized - b)
 
-    err = s * (b - f)
-
-    return err
+    return err.reshape(-1)
 
 
 def UpdatePose(z):
@@ -146,7 +131,7 @@ def UpdatePose(z):
 def P3PKe(m, X, inlier_thres=1e-5):
     """
     Perspective-3-point algorithm from
-    Ke, T., & Roumeliotis, S. I. (CVPR'17). An efficient algebraic solution to the perspective-three-point problem.     
+    Ke, T., & Roumeliotis, S. I. (CVPR'17). An efficient algebraic solution to the perspective-three-point problem.
 
 
     Parameters
@@ -278,11 +263,9 @@ def P3PKe_Ransac(G_p_f, C_b_f_hm, w, thres=0.01):
     Nsample=4
     inlier_score_best=0
 
-    for iter in range(50):
-
-        # Sampling based on weight factor
-        min_set = np.argpartition(np.exp(10.0 * w) * np.random.rand(w.shape[0]), -Nsample)[-Nsample:]
-
+    for iter in range(10):
+        ## Weighted sampling based on weight factor
+        min_set = np.argpartition(np.exp(w) * np.random.rand(w.shape[0]), -Nsample)[-Nsample:]
         C_R_G_hat, C_t_G_hat = P3PKe(C_b_f_hm[:, min_set], G_p_f[:, min_set], inlier_thres=thres)
 
         if C_R_G_hat is None or C_t_G_hat is None:
@@ -292,7 +275,8 @@ def P3PKe_Ransac(G_p_f, C_b_f_hm, w, thres=0.01):
         C_b_f_hat = C_R_G_hat @ G_p_f + C_t_G_hat
         C_b_f_hat = C_b_f_hat / np.linalg.norm(C_b_f_hat, axis=0)
         inlier_mask = np.sum(C_b_f_hat * C_b_f_hm, axis=0) > (1.0 - inlier_thres)
-        inlier_score = np.sum(w[inlier_mask])        
+        inlier_score = np.sum(w[inlier_mask])
+
         if inlier_score > inlier_score_best:
             inlier_best = inlier_mask
             C_T_G_best = np.eye(4)
@@ -304,17 +288,15 @@ def P3PKe_Ransac(G_p_f, C_b_f_hm, w, thres=0.01):
 
 
 def RunPnPNL(C_T_G, G_p_f, C_b_f, w, cutoff=0.01):
-
     '''
     Weighted PnP based using weight w and bearing angular loss.
     Return optimized P_new = optimized C_T_G.
     '''
-    
 
-    z0, b = SetupPnPNL(C_T_G, G_p_f, C_b_f)
+    z0 = VectorizeInitialPose(C_T_G)
     res = least_squares(
-        lambda x: MeasureReprojectionSinglePose(x, b, z0[7:], w),
-        z0[:7],
+        lambda x: MeasureReprojectionSinglePose(x, G_p_f, C_b_f, w),
+        z0,
         verbose=0,
         ftol=1e-4,
         max_nfev=50,
@@ -327,5 +309,3 @@ def RunPnPNL(C_T_G, G_p_f, C_b_f, w, cutoff=0.01):
     P_new = UpdatePose(z)
 
     return P_new
-
-

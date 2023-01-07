@@ -16,7 +16,7 @@ def compute_error(C_R_G, C_t_G, C_R_G_hat, C_t_G_hat):
     return rot_err, trans_err
 
 def compute_2d3d(opt, pred_heatmap, peak_threshold, landmark2d, landmark3d, C_b_f_gt, H_hm, W_hm, K_inv,
-                 mode='test', METRICS_LOGGING=None):
+                 METRICS_LOGGING=None):
     G_p_f = []
     C_b_f_hm = []
     weights = []
@@ -172,7 +172,7 @@ def inference(opt, minimal_tight_thr=1e-2, opt_tight_thr=5e-3, mode='test'):
                 G_p_f, C_b_f_hm, weights = compute_2d3d(opt, pred_heatmap[b], peak_threshold,
                                                         landmark2d[b], landmark_data,
                                                         batch['landmark3d'][b].cpu().numpy(),
-                                                        H_hm, W_hm, K_inv[b], mode, METRICS_LOGGING)
+                                                        H_hm, W_hm, K_inv[b], METRICS_LOGGING)
 
                 pnp_inlier, C_T_G_hat = compute_pose(G_p_f, C_b_f_hm, weights,
                                                     minimal_tight_thr, opt_tight_thr,
