@@ -36,7 +36,7 @@ cloud is shown only for the purpose of visualization.
 
 ### Description
 Our Indoor-6 dataset was created from multiple sessions captured in six indoor scenes over multiple days. The pseudo 
-ground truth (pGT) 3D point clouds and camera poses for each scene are computed using [COLMAP](https://colmap.github.io/). The figure below 
+ground truth (pGT) 3D point clouds and camera poses for each scene are computed using [COLMAP](https://colmap.github.io/). All training data uses only colmap reconstruction from training images. The figure below 
 shows the camera poses (in red) and point clouds (in gray) and for each scene, the number of video and images in the 
 training and test split respectively. Compared to [7-scenes](https://www.microsoft.com/en-us/research/project/rgb-d-dataset-7-scenes/), the scenes in Indoor-6 are larger, have multiple rooms, 
 contains illumination variations as the images span multiple days and different times of day.
@@ -52,6 +52,7 @@ below:
 * [scene4a](https://drive.google.com/file/d/1ywLifH9-RAedjM-oCAR2CshHEinwawJz/view?usp=sharing) (2285/158/158 images)
 * [scene5](https://drive.google.com/file/d/1mdlz-uc9D6eS7MJtjf_09Wof0PAoaqj4/view?usp=sharing) (4946/512/424 images)
 * [scene6](https://drive.google.com/file/d/1cuHbm_Sdy3hbUJLdFrYftguUUY_35bYc/view?usp=sharing) (1761/322/323 images)
+* [colmap]() (colmap reconstructions for all scenes.)
 
 **Note**: The table below shows quantitative results on two new scenes (scene2a and scene4a) that were added to the dataset after the paper was published. Unfortunately, we are unable to release scene2 and scene4 from the original dataset due to privacy reasons. Therefore, we have created these scenes as a replacement and released them.
 <p align="center">
@@ -59,7 +60,7 @@ below:
 <p/>
 
 
-[comment]: <> (### Organization)
+
 
 
 # Code
@@ -80,7 +81,8 @@ Download the indoor6 dataset using the links above and stored them under `datase
 ```
 dataset_directory
             └── indoor6
-                    ├── scene1
+                    ├── indoor6-colmap                            
+                    └── scene1
                     └── scene2a
                     └── scene3
                     └── scene4a
@@ -88,6 +90,7 @@ dataset_directory
                     └── scene6
 ```
 
+**Note** We run colmap on two sets of images: (1) using all images (`indoor6-colmap/scenex`) and (2) using only training images (`indoor6-colmap/scenex-tr`), then align them.
 
 There are two approaches to train the scene landmark detector for each scene. The first approach directly works on the full 2D input images. The second approach extract patches from the training images on-the-fly and then training a detector on these patches. The argument --action must be set to `train` or `train_patches` in order to use these two approaches respectively as follows:
 
@@ -133,6 +136,27 @@ You should see the evaluation table at the end:
 ```
 python main.py --action test --dataset_folder /dataset_directory/indoor6/ --scene_id scene1 --output_folder test_log_directory/scene1/ --pretrained_model pretrained_models_directory/scene1.ckpt`
 ```
+
+## Landmark Selection
+
+To select the best L (e.g., 300) landmarks out of all 3D points triangulated from colmap on scene6, we run the following script:
+
+```
+python utils/landmark_selection.py --dataset_folder /dataset_directory/indoor6/ --scene_id scene6 --num_landmarks 300
+```
+
+This script create 2 new files landmarks-300v2.txt and visibility-300v2.txt that are stored under `dataset_directory/indoor6/scene6/landmarks/`. Note that this result is slightly different than the original version due to changes in thresholds and restructure.
+
+To visualize the new selected landmark, we run the following script:
+```
+python utils/patches_per_landmark_visualization.py --dataset_folder /home/tien/Data/MSR/Data/indoor6 --output_folder visualization_folder --landmark_config landmarks/landmarks-300v2 --visibility_config landmarks/visibility-300v2 --scene_id scene6 --num_landmarks 300
+```
+
+The output visualization is stored under `visualization_folder` where each subfolder (000-299) contains multiple cropped of training images that observes that landmark, for example, in folder `visualization_folder/000` we can find the following image, the green square denotes the landmark 0th's 2D location.
+
+![landmark_selection](media/scene6_landmark0_sample.jpg)
+
+
 
 # Contributing
 
