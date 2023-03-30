@@ -66,9 +66,6 @@ class Indoor6(Dataset):
         self.gray_image_output = gray_image_output
         self.mode = mode
 
-        print('mode: ', mode)
-        print('number of images :', self.num_images)
-
         landmark_file = open(root_folder + '/' + scene_id
                                          + '/%s.txt' % landmark_config, 'r')
         num_landmark = int(landmark_file.readline())
