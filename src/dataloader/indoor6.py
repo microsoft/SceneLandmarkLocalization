@@ -21,7 +21,7 @@ np.random.seed(0)
 class Indoor6(Dataset):
     def __init__(self, root_folder="",
                  scene_id='', mode='all',
-                 landmark_idx=-1, skip_image_index=1,
+                 landmark_idx=[None], skip_image_index=1,
                  input_image_downsample=1, gray_image_output=False,
                  landmark_config='landmarks/landmarks-50',
                  visibility_config='landmarks/visibility-50'):
@@ -69,18 +69,23 @@ class Indoor6(Dataset):
         landmark_file = open(root_folder + '/' + scene_id
                                          + '/%s.txt' % landmark_config, 'r')
         num_landmark = int(landmark_file.readline())
-        self.landmarks = []
+        self.landmark = []
         for l in range(num_landmark):
             pl = landmark_file.readline().split()
             pl = np.array([float(pl[i]) for i in range(len(pl))])
-            self.landmarks.append(pl)
-        self.landmarks = np.asarray(self.landmarks)[:, 1:]
+            self.landmark.append(pl)
+        self.landmark = np.asarray(self.landmark)[:, 1:]
 
         self.image_downsampled = input_image_downsample
 
         visibility_file = root_folder + '/' + scene_id + '/%s.txt' % visibility_config
         self.visibility = np.loadtxt(visibility_file).astype(bool)
-        self.landmark = self.landmarks.transpose()
+
+        if landmark_idx[0] != None:
+            self.landmark = self.landmark[landmark_idx]
+            self.visibility = self.visibility[landmark_idx]
+        
+        self.landmark = self.landmark.transpose()
 
     def _modify_intrinsic(self, index):
         W = None
@@ -157,28 +162,27 @@ class Indoor6(Dataset):
                   'inv_intrinsics': torch.tensor(K_inv, dtype=torch.float32, requires_grad=False),
                   'landmark3d': torch.tensor(landmark3d[:3], dtype=torch.float32, requires_grad=False),
                   }
+        
+        proj = K @ (C_T_G[:3, :3] @ self.landmark + C_T_G[:3, 3:])
+        landmark2d = proj / proj[2:]
+        output['landmark2d'] = landmark2d[:2]
 
-        if self.mode == 'train':
-            proj = K @ (C_T_G[:3, :3] @ self.landmark + C_T_G[:3, 3:])
-            landmark2d = proj / proj[2:]
-            output['landmark2d'] = landmark2d[:2]
+        inside_patch = (landmark2d[0] < W_modified) * \
+                        (landmark2d[0] >= 0) * \
+                        (landmark2d[1] < H_modified) * \
+                        (landmark2d[1] >= 0)  # L vector
 
-            inside_patch = (landmark2d[0] < W_modified) * \
-                           (landmark2d[0] >= 0) * \
-                           (landmark2d[1] < H_modified) * \
-                           (landmark2d[1] >= 0)  # L vector
+        # visible by propagated colmap visibility and inside image
+        _mask1 = self.visibility[:, self.image_indices[index]] * inside_patch
 
-            # visible by propagated colmap visibility and inside image
-            _mask1 = self.visibility[:, self.image_indices[index]] * inside_patch
+        # outside patch
+        # _mask2 = ~inside_patch
 
-            # outside patch
-            # _mask2 = ~inside_patch
+        # inside image but not visible by colmap
+        _mask3 = (self.visibility[:, self.image_indices[index]] == 0) * inside_patch
 
-            # inside image but not visible by colmap
-            _mask3 = (self.visibility[:, self.image_indices[index]] == 0) * inside_patch
-
-            visibility_mask = 1.0 * _mask1 + 0.5 * _mask3
-            output['visibility'] = visibility_mask
+        visibility_mask = 1.0 * _mask1 + 0.5 * _mask3
+        output['visibility'] = visibility_mask
 
         return output
 

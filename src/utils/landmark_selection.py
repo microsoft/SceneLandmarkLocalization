@@ -48,7 +48,7 @@ def ComputePerPointAngularSpan(pointInGlobal, image_ids, images):
     return np.arccos(np.clip(1 - 2.0 * np.min(eigH)/np.max(eigH), 0, 1))
 
 
-def SaveLandmarksAndVisibilityMask(selected_landmarks, points3D, images, indoor6_imagename_to_index, num_images, root_path):
+def SaveLandmarksAndVisibilityMask(selected_landmarks, points3D, images, indoor6_imagename_to_index, num_images, root_path, outformat):
     
     num_landmarks = len(selected_landmarks['id'])
 
@@ -59,9 +59,9 @@ def SaveLandmarksAndVisibilityMask(selected_landmarks, points3D, images, indoor6
             if images[imgid].name in indoor6_imagename_to_index:
                 visibility_mask[i, indoor6_imagename_to_index[images[imgid].name]] = 1
 
-    np.savetxt(os.path.join(root_path, 'visibility-%dv2.txt' % num_landmarks), visibility_mask)
+    np.savetxt(os.path.join(root_path, 'visibility-%d%s.txt' % (num_landmarks, outformat)), visibility_mask, fmt='%d')
 
-    f = open(os.path.join(root_path, 'landmarks-%dv2.txt' % num_landmarks), 'w')
+    f = open(os.path.join(root_path, 'landmarks-%d%s.txt' % (num_landmarks, outformat)), 'w')
     f.write('%d\n' % num_landmarks)
     for i in range(selected_landmarks['xyz'].shape[1]):
         f.write('%d %4.4f %4.4f %4.4f\n' % (i, 
@@ -85,6 +85,9 @@ if __name__ == '__main__':
     parser.add_argument(
         '--num_landmarks', type=int, default=300,
         help='Number of selected landmarks.')
+    parser.add_argument(
+        '--output_format', type=str, default='v2',
+        help='Landmark file output.')
 
     opt = parser.parse_args()
 
@@ -120,7 +123,7 @@ if __name__ == '__main__':
             trackLengthScore = 0.25 * np.log2(trackLength)
             timeSpanScore = timespan / maxSession
             
-            if timespan >= 1 and depthMean < 5.0 and anglespan > 0.5:
+            if timespan >= 3 and depthMean < 3.0 and anglespan > 0.2:
                 points3D_ids[validIdx] = k
                 points3D_scores[validIdx] = depthScore + trackLengthScore + timeSpanScore + anglespan
                 validIdx += 1                
@@ -142,7 +145,7 @@ if __name__ == '__main__':
     selected_landmarks['score'][0] = points3D_scores[sorted_indices[-1]]
 
     nselected = 1
-    radius = 3.0
+    radius = 10.0
 
     while nselected < opt.num_landmarks:
         for i in reversed(sorted_indices):
@@ -175,4 +178,4 @@ if __name__ == '__main__':
 
     num_images = len(indoor6_images['train']) + len(indoor6_images['val']) + len(indoor6_images['test'])
     SaveLandmarksAndVisibilityMask(selected_landmarks, points3D, images, indoor6_imagename_to_index, num_images, 
-                                   os.path.join(opt.dataset_folder, opt.scene_id, 'landmarks'))
+                                   os.path.join(opt.dataset_folder, opt.scene_id, 'landmarks'), opt.output_format)

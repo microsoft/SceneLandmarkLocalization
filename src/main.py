@@ -31,8 +31,11 @@ if __name__ == '__main__':
         '--gpu_device', type=str, default='cuda:0',
         help='GPU device')
     parser.add_argument(
-        '--pretrained_model', type=str, default='',
+        '--pretrained_model', type=str, nargs='+', default='',
         help='Pretrained detector model')
+    parser.add_argument(
+        '--landmark_indices', type=int, nargs='+', default='',
+        help='Landmark indices')
     parser.add_argument(
         '--num_epochs', type=int, default=200,
         help='Number of training epochs.')
@@ -81,11 +84,67 @@ if __name__ == '__main__':
                                                                   eval_stats[x]['r5p5']))
         else:
             eval_stats = inference(opt, minimal_tight_thr=1e-3, opt_tight_thr=1e-3)
-            print("{:>10} {:>30} {:>30} {:>20}".format('Scene ID',
-                                                       'Median trans error (cm)',
-                                                       'Median rotation error (deg)',
-                                                       'Recall 5cm5deg (%)'))
-            print("{:>10} {:>30.4} {:>30.4} {:>20.2%}".format(opt.scene_id,
-                                                       100. * eval_stats['median_trans_error'],
-                                                       eval_stats['median_rot_error'],
-                                                       eval_stats['r5p5']))
+            print("{:>10} {:>30} {:>30} {:>20} {:>15} {:>15} {:>15} {:>15} {:>20} {:>20}".format('Scene ID',
+                                                                                'Median trans error (cm)',
+                                                                                'Median rotation error (deg)',
+                                                                                'Recall 1cm1deg (%)',
+                                                                                '2cm2deg (%)',
+                                                                                '5cm5deg (%)',
+                                                                                '10cm10deg (%)',
+                                                                                '5deg (%)',
+                                                                                'Median Pixel Error',
+                                                                                'Median Angular Error'))
+            print("{:>10} {:>30.4} {:>30.4} {:>20.2%} {:>15.2%} {:>15.2%} {:>15.2%} {:>15.2%} {:>20.4} {:>20.4}".format(opt.scene_id,
+                                                                                100. * eval_stats['median_trans_error'],
+                                                                                eval_stats['median_rot_error'],
+                                                                                eval_stats['r1p1'],
+                                                                                eval_stats['r2p2'],
+                                                                                eval_stats['r5p5'],
+                                                                                eval_stats['r10p10'],
+                                                                                eval_stats['r5'],
+                                                                                np.median(eval_stats['pixel_error']),
+                                                                                np.median(eval_stats['angular_error'])))
+            
+            print("{:>50} {:>10} {:>10} {:>10} {:>10} {:>10}".format('Max heatmap peak (angle)',
+                                                                                '0.2',
+                                                                                '0.4',
+                                                                                '0.6',
+                                                                                '0.8',
+                                                                                '1.0'))            
+            
+            print("{:>50} {:>10.4} {:>10.4} {:>10.4} {:>10.4} {:>10.4}".format(opt.scene_id,
+                                                                                np.median(eval_stats['angular_error'][eval_stats['heatmap_peak'] >= 0.2]),
+                                                                                np.median(eval_stats['angular_error'][eval_stats['heatmap_peak'] >= 0.4]),
+                                                                                np.median(eval_stats['angular_error'][eval_stats['heatmap_peak'] >= 0.6]),
+                                                                                np.median(eval_stats['angular_error'][eval_stats['heatmap_peak'] >= 0.8]),
+                                                                                np.median(eval_stats['angular_error'][eval_stats['heatmap_peak'] >= 1.0])))
+            
+            
+            print("{:>50} {:>10} {:>10} {:>10} {:>10} {:>10}".format('Max heatmap peak (pixel)',
+                                                                                '0.2',
+                                                                                '0.4',
+                                                                                '0.6',
+                                                                                '0.8',
+                                                                                '1.0'))            
+            print("{:>50} {:>10.4} {:>10.4} {:>10.4} {:>10.4} {:>10.4}".format(opt.scene_id,
+                                                                                np.median(eval_stats['pixel_error'][eval_stats['heatmap_peak'] >= 0.2]),
+                                                                                np.median(eval_stats['pixel_error'][eval_stats['heatmap_peak'] >= 0.4]),
+                                                                                np.median(eval_stats['pixel_error'][eval_stats['heatmap_peak'] >= 0.6]),
+                                                                                np.median(eval_stats['pixel_error'][eval_stats['heatmap_peak'] >= 0.8]),
+                                                                                np.median(eval_stats['pixel_error'][eval_stats['heatmap_peak'] >= 1.0])))
+            
+            print("{:>50} {:>10} {:>10} {:>10} {:>10} {:>10}".format('Max heatmap peak (count)',
+                                                                                '0.2',
+                                                                                '0.4',
+                                                                                '0.6',
+                                                                                '0.8',
+                                                                                '1.0'))            
+            
+            print("{:>50} {:>10.4} {:>10.4} {:>10.4} {:>10.4} {:>10.4}".format(opt.scene_id,
+                                                                                np.sum([eval_stats['heatmap_peak'] >= 0.2]) / len(eval_stats['heatmap_peak']),
+                                                                                np.sum([eval_stats['heatmap_peak'] >= 0.4]) / len(eval_stats['heatmap_peak']),
+                                                                                np.sum([eval_stats['heatmap_peak'] >= 0.6]) / len(eval_stats['heatmap_peak']),
+                                                                                np.sum([eval_stats['heatmap_peak'] >= 0.8]) / len(eval_stats['heatmap_peak']),
+                                                                                np.sum([eval_stats['heatmap_peak'] >= 1.0]) / len(eval_stats['heatmap_peak'])))
+
+

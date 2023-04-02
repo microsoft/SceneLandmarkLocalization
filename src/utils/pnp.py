@@ -263,9 +263,9 @@ def P3PKe_Ransac(G_p_f, C_b_f_hm, w, thres=0.01):
     Nsample=4
     inlier_score_best=0
 
-    for iter in range(10):
+    for iter in range(50):
         ## Weighted sampling based on weight factor
-        min_set = np.argpartition(np.exp(w) * np.random.rand(w.shape[0]), -Nsample)[-Nsample:]
+        min_set = np.argpartition(w * np.random.rand(w.shape[0]), -Nsample)[-Nsample:]
         C_R_G_hat, C_t_G_hat = P3PKe(C_b_f_hm[:, min_set], G_p_f[:, min_set], inlier_thres=thres)
 
         if C_R_G_hat is None or C_t_G_hat is None:
@@ -309,3 +309,59 @@ def RunPnPNL(C_T_G, G_p_f, C_b_f, w, cutoff=0.01):
     P_new = UpdatePose(z)
 
     return P_new
+
+
+def bearingEstimate(C_T_G, Gp):
+    Cp = C_T_G[:3, :3] @ Gp + C_T_G[:3, 3:]
+    CpNorm = np.linalg.norm(Cp, axis=0, keepdims=True)
+    Cb = Cp / CpNorm
+
+    return Cb, Cp, CpNorm
+
+
+def bearingJacobian(bEst, CpNorm):
+    # Return 3x3 matrix
+    return 1.0/CpNorm*(np.eye(3) - np.outer(bEst, bEst))
+
+
+def PnPHessian(C_T_G, Gp):
+    Cbest, Cpest, CpNormest = bearingEstimate(C_T_G, Gp)
+    hessian = 1e-4 * np.zeros((6, 6))
+
+    for m in range(Cbest.shape[1]):
+        Jm = bearingJacobian(Cbest[:, m], CpNormest[0, m]) @ np.concatenate((skewsymm(Cpest[:, m]), np.eye(3)), axis=1)
+        hessian += Jm.T @ Jm
+
+    return hessian
+
+
+def PnP(C_T_G, Gp, B, w, iter=3):
+
+    for _ in range(iter):
+
+        # 1. Compute cost
+        Cbest, Cpest, CpNormest = bearingEstimate(C_T_G, Gp)
+
+        # 2. Compute Hesian, residual of all measurements
+        hesian = 1e-1 * np.eye(6)
+        residual = np.zeros((6,))
+
+        for m in range(Cbest.shape[1]):
+            Jm = w[m] * bearingJacobian(Cbest[:, m], CpNormest[0, m]) @ np.concatenate((skewsymm(Cpest[:, m]), np.eye(3)), axis=1)
+            hesian += Jm.T @ Jm
+            residual += Jm.T @ (B[:, m] - Cbest[:, m])
+
+        # 3. Solve
+        dT = np.linalg.solve(hesian, residual)
+
+        # 4. Update
+        Rnew = (np.eye(3) - skewsymm(dT[:3])) @ C_T_G[:3, :3]
+        tnew = C_T_G[:3, 3] + dT[3:]
+        U, _, Vh = np.linalg.svd(Rnew)
+        Rnew = U @ Vh
+        C_T_G[:3, :3] = (np.linalg.det(Rnew)) * Rnew
+        C_T_G[:3, 3] = tnew
+
+    # print(bearingCost)
+
+    return C_T_G
