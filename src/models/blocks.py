@@ -5,7 +5,8 @@ from .conv2d_layers import Conv2dSameExport
 
 def _make_encoder(use_pretrained, exportable=True, output_downsample=4):
 
-    pretrained = _make_pretrained_efficientnet_lite0(use_pretrained, exportable=exportable)
+    # pretrained = _make_pretrained_efficientnet_lite0(use_pretrained, exportable=exportable)
+    pretrained = torch.load('pretrained_efficientnetlite0.net')
 
     if output_downsample <= 16:
         pretrained.layer2[0][0].conv_dw.stride = (1, 1)
