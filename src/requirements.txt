@@ -1,6 +1,7 @@
 # Scene Landmarks Detector Requirements
 # Usage: pip install -r requirements.txt
 
+argparse
 matplotlib>=3.2.2
 numpy>=1.22.3
 Pillow>=8.2.0
