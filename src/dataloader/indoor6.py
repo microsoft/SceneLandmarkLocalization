@@ -195,7 +195,7 @@ class Indoor6Patches(Indoor6):
                  landmark_idx=-1, skip_image_index=1,
                  input_image_downsample=1, gray_image_output=False,
                  patch_size=96,
-                 positive_samples=8, random_samples=8,
+                 positive_samples=4, random_samples=4,
                  landmark_config='landmarks/landmarks-50',
                  visibility_config='landmarks/visibility-50',
                  augmentation=True):
