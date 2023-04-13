@@ -66,6 +66,8 @@ def train(opt):
 
     logging.basicConfig(filename='%s/training.log' % opt.output_folder, filemode='a', level=logging.DEBUG, format='')
     logging.info("Scene Landmark Detector Training")
+    print('Start training ...')
+
     stats_pkl_logging = {'train': [], 'eval': []}
 
     device = opt.gpu_device

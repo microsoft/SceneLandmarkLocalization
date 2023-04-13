@@ -45,6 +45,11 @@ if __name__ == '__main__':
 
     opt = parser.parse_args()
 
+    print('scene_id: ', opt.scene_id)
+    print('action: ', opt.action)
+    print('training_batch_size: ', opt.training_batch_size)
+    print('output downsample: ', opt.output_downsample)
+
     if opt.action == 'train':
         train(opt)
     elif opt.action == 'train_patches':
