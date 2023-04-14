@@ -16,6 +16,9 @@ if __name__ == '__main__':
         '--landmark_config', type=str, default='landmarks/landmarks-300',
         help='File containing scene-specific 3D landmarks.')
     parser.add_argument(
+        '--landmark_indices', type=int, nargs='+', default='',
+        help='Landmark indices')
+    parser.add_argument(
         '--visibility_config', type=str, default='landmarks/visibility_aug-300',
         help='File containing information about visibility of landmarks in cameras associated with training set.')
     parser.add_argument(
@@ -31,7 +34,7 @@ if __name__ == '__main__':
         '--gpu_device', type=str, default='cuda:0',
         help='GPU device')
     parser.add_argument(
-        '--pretrained_model', type=str, default='',
+        '--pretrained_model', type=str, nargs='+', default='',
         help='Pretrained detector model')
     parser.add_argument(
         '--num_epochs', type=int, default=200,

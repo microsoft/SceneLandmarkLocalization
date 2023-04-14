@@ -72,7 +72,10 @@ def train(opt):
 
     device = opt.gpu_device
 
-    train_dataset = Indoor6(landmark_idx=-1,
+    assert len(opt.landmark_indices) == 0 or len(opt.landmark_indices) == 2, "landmark indices must be empty or length 2"
+
+    train_dataset = Indoor6(landmark_idx=np.arange(opt.landmark_indices[0],
+                                                   opt.landmark_indices[1]) if len(opt.landmark_indices) == 2 else [None],
                             scene_id=opt.scene_id,
                             mode='train',
                             root_folder=opt.dataset_folder,
@@ -83,8 +86,12 @@ def train(opt):
 
     train_dataloader = DataLoader(dataset=train_dataset, num_workers=4, batch_size=opt.training_batch_size, shuffle=True,
                                   pin_memory=True)
+    
+    ## Save the trained landmark configurations
+    np.savetxt(os.path.join(opt.output_folder, 'landmarks.txt'), train_dataset.landmark)
+    np.savetxt(os.path.join(opt.output_folder, 'visibility.txt'), train_dataset.visibility, fmt='%d')
 
-    num_landmarks = train_dataset.landmarks.shape[0]
+    num_landmarks = train_dataset.landmark.shape[1]
 
     if opt.model == 'efficientnet':
         cnn = EfficientNetSLD(num_landmarks=num_landmarks, output_downsample=opt.output_downsample).to(device=device)
@@ -194,20 +201,26 @@ def train_patches(opt):
 
     device = opt.gpu_device
 
-    train_dataset = Indoor6Patches(landmark_idx=-1,
-                                   scene_id=opt.scene_id,
-                                   mode='train',
-                                   root_folder=opt.dataset_folder,
-                                   input_image_downsample=2,
-                                   landmark_config=opt.landmark_config,
-                                   visibility_config=opt.visibility_config,
-                                   skip_image_index=1,
-                                   patch_size=int(24*opt.output_downsample))
+    assert len(opt.landmark_indices) == 0 or len(opt.landmark_indices) == 2, "landmark indices must be empty or length 2"
 
-    train_dataloader = DataLoader(dataset=train_dataset, num_workers=4, batch_size=opt.training_batch_size,
-                                  shuffle=True, pin_memory=True)
+    train_dataset = Indoor6Patches(landmark_idx=np.arange(opt.landmark_indices[0],
+                                                   opt.landmark_indices[1]) if len(opt.landmark_indices) == 2 else [None],
+                            scene_id=opt.scene_id,
+                            mode='train',
+                            root_folder=opt.dataset_folder,
+                            input_image_downsample=2,
+                            landmark_config=opt.landmark_config,
+                            visibility_config=opt.visibility_config,
+                            skip_image_index=1)
 
-    num_landmarks = train_dataset.landmarks.shape[0]
+    train_dataloader = DataLoader(dataset=train_dataset, num_workers=4, batch_size=opt.training_batch_size, shuffle=True,
+                                  pin_memory=True)
+    
+    ## Save the trained landmark configurations
+    np.savetxt(os.path.join(opt.output_folder, 'landmarks.txt'), train_dataset.landmark)
+    np.savetxt(os.path.join(opt.output_folder, 'visibility.txt'), train_dataset.visibility, fmt='%d')
+
+    num_landmarks = train_dataset.landmark.shape[1]
 
     if opt.model == 'efficientnet':
         cnn = EfficientNetSLD(num_landmarks=num_landmarks, output_downsample=opt.output_downsample).to(device=device)

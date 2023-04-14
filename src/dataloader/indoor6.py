@@ -21,7 +21,7 @@ np.random.seed(0)
 class Indoor6(Dataset):
     def __init__(self, root_folder="",
                  scene_id='', mode='all',
-                 landmark_idx=-1, skip_image_index=1,
+                 landmark_idx=[None], skip_image_index=1,
                  input_image_downsample=1, gray_image_output=False,
                  landmark_config='landmarks/landmarks-50',
                  visibility_config='landmarks/visibility-50'):
@@ -66,24 +66,27 @@ class Indoor6(Dataset):
         self.gray_image_output = gray_image_output
         self.mode = mode
 
-        print('mode: ', mode)
-        print('number of images :', self.num_images)
-
         landmark_file = open(root_folder + '/' + scene_id
                                          + '/%s.txt' % landmark_config, 'r')
         num_landmark = int(landmark_file.readline())
-        self.landmarks = []
+        self.landmark = []
         for l in range(num_landmark):
             pl = landmark_file.readline().split()
             pl = np.array([float(pl[i]) for i in range(len(pl))])
-            self.landmarks.append(pl)
-        self.landmarks = np.asarray(self.landmarks)[:, 1:]
+            self.landmark.append(pl)
+        self.landmark = np.asarray(self.landmark)[:, 1:]
 
         self.image_downsampled = input_image_downsample
 
         visibility_file = root_folder + '/' + scene_id + '/%s.txt' % visibility_config
         self.visibility = np.loadtxt(visibility_file).astype(bool)
-        self.landmark = self.landmarks.transpose()
+        
+        if landmark_idx[0] != None:
+            self.landmark = self.landmark[landmark_idx]
+            self.visibility = self.visibility[landmark_idx]
+        
+        self.landmark = self.landmark.transpose()
+
 
     def _modify_intrinsic(self, index):
         W = None
@@ -192,7 +195,7 @@ class Indoor6(Dataset):
 class Indoor6Patches(Indoor6):
     def __init__(self, root_folder="",
                  scene_id='', mode='all',
-                 landmark_idx=-1, skip_image_index=1,
+                 landmark_idx=[None], skip_image_index=1,
                  input_image_downsample=1, gray_image_output=False,
                  patch_size=96,
                  positive_samples=4, random_samples=4,
@@ -285,12 +288,8 @@ class Indoor6Patches(Indoor6):
         landmark_visibility_on_patch = []
         L = self.landmark.shape[1]  # number of keypoints
 
-        list_landmarks = None
-        if self.landmark_idx == -1:
-            list_landmarks = np.random.permutation(L)[:self.positive_samples]
-        else:
-            list_landmarks = [self.landmark_idx]
-
+        list_landmarks = np.random.permutation(L)[:self.positive_samples]
+        
         ## Create positive examples
         for lm_idx in list_landmarks:
             ## Randomly draw image index from visibility mask
