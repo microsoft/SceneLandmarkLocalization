@@ -1,4 +1,4 @@
-from copy import copy
+import copy
 import numpy as np
 import os
 import torch
@@ -9,6 +9,7 @@ from dataloader.indoor6 import Indoor6
 from models.efficientlitesld import EfficientNetSLD
 from utils.pnp import *
 
+
 def compute_error(C_R_G, C_t_G, C_R_G_hat, C_t_G_hat):
 
     rot_err = 180 / np.pi * np.arccos(np.clip(0.5 * (np.trace(C_R_G.T @ C_R_G_hat) - 1.0), a_min=-1., a_max=1.))
@@ -16,13 +17,18 @@ def compute_error(C_R_G, C_t_G, C_R_G_hat, C_t_G_hat):
 
     return rot_err, trans_err
 
+
 def compute_2d3d(opt, pred_heatmap, peak_threshold, landmark2d, landmark3d, C_b_f_gt, H_hm, W_hm, K_inv,
                  METRICS_LOGGING=None):
-    G_p_f = []
-    C_b_f_hm = []
-    weights = []
+    N = pred_heatmap.shape[0]
+    G_p_f = np.zeros((3, N))
+    C_b_f_hm = np.zeros((3, N))
+    weights = np.zeros(N)
+    validIdx = 0
 
-    for l in range(pred_heatmap.shape[0]):
+    pixel_error = []
+    angular_error = []
+    for l in range(N):
         pred_heatmap_l = pred_heatmap[l]
         max_pred_heatmap_l = np.max(pred_heatmap_l)
 
@@ -42,8 +48,8 @@ def compute_2d3d(opt, pred_heatmap, peak_threshold, landmark2d, landmark3d, C_b_
             refine_y = np.sum(patch_peak_yx * yy_patch) / np.sum(patch_peak_yx)
             refine_x = np.sum(patch_peak_yx * xx_patch) / np.sum(patch_peak_yx)
 
-            if METRICS_LOGGING is not None:
-                METRICS_LOGGING['pixel_error'].append(np.linalg.norm(landmark2d[:2, l] -
+            
+            pixel_error.append(np.linalg.norm(landmark2d[:2, l] -
                                               opt.output_downsample * np.array([refine_x, refine_y])))
 
             pred_bearing = K_inv @ np.array([refine_x, refine_y, 1])
@@ -52,58 +58,40 @@ def compute_2d3d(opt, pred_heatmap, peak_threshold, landmark2d, landmark3d, C_b_
             gt_bearing = gt_bearing / np.linalg.norm(gt_bearing)
             angular_error_batch = np.arccos(
                 np.clip(pred_bearing @ gt_bearing, a_min=-1, a_max=1)) * 180 / np.pi
-            if METRICS_LOGGING is not None:
-                METRICS_LOGGING['angular_error'].append(angular_error_batch)
+            
+            angular_error.append(angular_error_batch)
 
-            weights.append(max_pred_heatmap_l)
-            C_b_f_hm.append(pred_bearing.reshape(3, 1))
-            G_p_f.append(landmark3d[l].reshape(3, 1))
+            weights[validIdx] = max_pred_heatmap_l
+            C_b_f_hm[:, validIdx] = pred_bearing
+            G_p_f[:, validIdx] = landmark3d[:, l]
+            validIdx += 1
 
-    return G_p_f, C_b_f_hm, weights
+    return G_p_f[:, :validIdx], C_b_f_hm[:, :validIdx], weights[:validIdx], np.asarray(pixel_error), np.asarray(angular_error)
 
 
-def compute_pose(G_p_f, C_b_f_hm, weights, minimal_tight_thr, opt_tight_thr, img_id, OUTPUT_FOLDER):
-    Ndetected_landmarks = len(C_b_f_hm)
+def compute_pose(G_p_f, C_b_f_hm, weights, minimal_tight_thr, opt_tight_thr):
 
-    ### Saving 2D-3D correspondences
-    if Ndetected_landmarks > 0:
-        C_b_f_hm = np.concatenate(C_b_f_hm, axis=1)
-        G_p_f = np.concatenate(G_p_f, axis=1)
-        weights = np.asarray(weights)
-
-        if not os.path.exists(os.path.join(OUTPUT_FOLDER, 'sld2d3d')):
-            os.makedirs(os.path.join(OUTPUT_FOLDER, 'sld2d3d'))
-
-        np.savetxt('%s/sld2d3d/%06d.txt' % (OUTPUT_FOLDER, img_id),
-                   np.concatenate((C_b_f_hm, G_p_f), axis=0))
-    else:
-        C_b_f_hm = None
-        G_p_f = None
-        weights = None
-
+    Ndetected_landmarks = C_b_f_hm.shape[1]
 
     if Ndetected_landmarks >= 4:
         ## P3P ransac
         C_T_G_hat, PnP_inlier = P3PKe_Ransac(G_p_f, C_b_f_hm, weights,
                                              thres=minimal_tight_thr)
-        # print('inlier: ', np.sum(PnP_inlier))
+        
         if np.sum(PnP_inlier) >= 4:
             C_T_G_opt = RunPnPNL(C_T_G_hat,
-                                 G_p_f[:, PnP_inlier], C_b_f_hm[:, PnP_inlier],
+                                 G_p_f[:, PnP_inlier], 
+                                 C_b_f_hm[:, PnP_inlier],
                                  weights[PnP_inlier],
                                  cutoff=opt_tight_thr)
             return np.sum(PnP_inlier), C_T_G_opt
 
     return 0, None
 
+
 def inference(opt, minimal_tight_thr=1e-2, opt_tight_thr=5e-3, mode='test'):
 
     PRETRAINED_MODEL = opt.pretrained_model
-
-    if not os.path.exists(PRETRAINED_MODEL):
-        print(PRETRAINED_MODEL)
-        print('ckpt path not exist')
-        exit(1)
 
     device = opt.gpu_device
 
