@@ -15,9 +15,13 @@ if __name__ == '__main__':
     parser.add_argument(
         '--landmark_config', type=str, default='landmarks/landmarks-300',
         help='File containing scene-specific 3D landmarks.')
+    #parser.add_argument(
+    #    '--landmark_indices', type=int, nargs='+', default='',
+    #    help='Landmark indices')
     parser.add_argument(
-        '--landmark_indices', type=int, nargs='+', default='',
-        help='Landmark indices')
+        '--landmark_indices', type=int, action='append',
+        help = 'Landmark indices, specify twice',
+        required=True)      
     parser.add_argument(
         '--visibility_config', type=str, default='landmarks/visibility_aug-300',
         help='File containing information about visibility of landmarks in cameras associated with training set.')
