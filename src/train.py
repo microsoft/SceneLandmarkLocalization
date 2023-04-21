@@ -202,7 +202,6 @@ def train_patches(opt):
     device = opt.gpu_device
 
     assert len(opt.landmark_indices) == 0 or len(opt.landmark_indices) == 2, "landmark indices must be empty or length 2"
-
     train_dataset = Indoor6Patches(landmark_idx=np.arange(opt.landmark_indices[0],
                                                    opt.landmark_indices[1]) if len(opt.landmark_indices) == 2 else [None],
                             scene_id=opt.scene_id,
