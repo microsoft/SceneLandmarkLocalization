@@ -196,8 +196,7 @@ def inference(opt, minimal_tight_thr=1e-2, opt_tight_thr=5e-3, mode='test'):
                 xy1b = xy1[b][:2, Pb]                
 
                 pnp_inlier, C_T_G_hat = compute_pose(G_p_f, C_b_f, weights,
-                                                    minimal_tight_thr, opt_tight_thr,
-                                                    img_id, opt.output_folder)
+                                                    minimal_tight_thr, opt_tight_thr)
                 
                 rot_err, trans_err = 180., 1800.
                 if pnp_inlier >= 4:

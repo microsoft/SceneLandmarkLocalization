@@ -233,6 +233,7 @@ def train_patches(opt):
         # Training
         training_loss = 0
         for idx, batch in enumerate(tqdm(train_dataloader)):
+            
             cnn.train()
 
             B1, B2, _, H, W = batch['patches'].shape
@@ -295,7 +296,7 @@ def train_patches(opt):
         if scheduler.get_last_lr()[-1] > 5e-5:
             scheduler.step()
 
-        opt.pretrained_model = path
+        opt.pretrained_model = [path]
         eval_stats = inference(opt, opt_tight_thr=1e-3, minimal_tight_thr=1e-3, mode='val')
 
         median_angular_error = np.median(eval_stats['angular_error'])
