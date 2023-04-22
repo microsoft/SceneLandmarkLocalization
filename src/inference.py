@@ -124,7 +124,7 @@ def inference(opt, minimal_tight_thr=1e-2, opt_tight_thr=5e-3, mode='test'):
         # Adding pretrained model
         cnns.append(cnn)
 
-    peak_threshold = 20
+    peak_threshold = 2e-1
     img_id = 0
 
     METRICS_LOGGING = {'image_name': '',

@@ -15,9 +15,6 @@ if __name__ == '__main__':
     parser.add_argument(
         '--landmark_config', type=str, default='landmarks/landmarks-300',
         help='File containing scene-specific 3D landmarks.')
-    #parser.add_argument(
-    #    '--landmark_indices', type=int, nargs='+', default='',
-    #    help='Landmark indices')
     parser.add_argument(
         '--landmark_indices', type=int, action='append',
         help = 'Landmark indices, specify twice',
@@ -38,7 +35,7 @@ if __name__ == '__main__':
         '--gpu_device', type=str, default='cuda:0',
         help='GPU device')
     parser.add_argument(
-        '--pretrained_model', type=str, nargs='+', default='',
+        '--pretrained_model', type=str, action='append', default=[],
         help='Pretrained detector model')
     parser.add_argument(
         '--num_epochs', type=int, default=200,
