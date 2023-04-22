@@ -124,12 +124,12 @@ def inference(opt, minimal_tight_thr=1e-2, opt_tight_thr=5e-3, mode='test'):
         # Adding pretrained model
         cnns.append(cnn)
 
-    peak_threshold = 2e-1
+    peak_threshold = 20
     img_id = 0
 
     METRICS_LOGGING = {'image_name': '',
-                       'angular_error': [],
-                       'pixel_error': [],
+                       'angular_error': 180.,
+                       'pixel_error': 1800.,
                        'rot_err_all': 180.,
                        'trans_err_all': 180.,
                        'heatmap_peak': 0.0,

@@ -101,3 +101,4 @@ if __name__ == '__main__':
                                                        100. * eval_stats['median_trans_error'],
                                                        eval_stats['median_rot_error'],
                                                        eval_stats['r5p5']))
+            

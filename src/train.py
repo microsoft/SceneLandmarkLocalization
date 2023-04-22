@@ -319,22 +319,30 @@ def train_patches(opt):
              'recall': eval_stats['r5p5']
              })
 
-        str_log = 'epoch %3d: [%s] ' \
-                  'tr_loss= %10.2f, ' \
-                  'lowest_median= %8.4f deg. ' \
-                  'recall= %2.4f ' \
-                  'angular-err(deg.)= [%7.4f %7.4f %7.4f]  ' \
-                  'pixel-err= [%4.3f %4.3f %4.3f] [mean/med./min] ' % (epoch, datestring, training_loss,
-                                                                        lowest_median_angular_error,
-                                                                        eval_stats['r5p5'],
-                                                                        np.mean(eval_stats['angular_error']),
-                                                                        np.median(eval_stats['angular_error']),
-                                                                        np.min(eval_stats['angular_error']),
-                                                                        np.mean(eval_stats['pixel_error']),
-                                                                        np.median(eval_stats['pixel_error']),
-                                                                        np.min(eval_stats['pixel_error']))
-        print(str_log)
-        logging.info(str_log)
+
+        try:
+            str_log = 'epoch %3d: [%s] ' \
+                    'tr_loss= %10.2f, ' \
+                    'lowest_median= %8.4f deg. ' \
+                    'recall= %2.4f ' \
+                    'angular-err(deg.)= [%7.4f %7.4f %7.4f]  ' \
+                    'pixel-err= [%4.3f %4.3f %4.3f] [mean/med./min] ' % (epoch, datestring, training_loss,
+                                                                            lowest_median_angular_error,
+                                                                            eval_stats['r5p5'],
+                                                                            np.mean(eval_stats['angular_error']),
+                                                                            np.median(eval_stats['angular_error']),
+                                                                            np.min(eval_stats['angular_error']),
+                                                                            np.mean(eval_stats['pixel_error']),
+                                                                            np.median(eval_stats['pixel_error']),
+                                                                            np.min(eval_stats['pixel_error']))
+            print(str_log)
+            logging.info(str_log)
+        except ValueError:  #raised if array is empty.
+            str_log = 'epoch %3d: [%s] ' \
+                        'tr_loss= %10.2f, ' \
+                        'No correspondences found' % (epoch, datestring, training_loss)
+            print(str_log)
+            logging.info(str_log)
 
         with open('%s/stats.pkl' % opt.output_folder, 'wb') as f:
             pickle.dump(stats_pkl_logging, f)
