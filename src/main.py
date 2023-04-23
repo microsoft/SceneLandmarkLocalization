@@ -56,9 +56,19 @@ if __name__ == '__main__':
 
     if opt.action == 'train':
         train(opt)
+        opt.pretrained_model = [opt.output_folder + '/model-best_median.ckpt']
+        eval_stats = inference(opt, minimal_tight_thr=1e-3, opt_tight_thr=1e-3)
+        print("{:>10} {:>30} {:>30} {:>20}".format('Scene ID',
+                                                   'Median trans error (cm)',
+                                                   'Median rotation error (deg)',
+                                                   'Recall 5cm5deg (%)'))
+        print("{:>10} {:>30.4} {:>30.4} {:>20.2%}".format(opt.scene_id,
+                                                          100. * eval_stats['median_trans_error'],
+                                                          eval_stats['median_rot_error'],
+                                                          eval_stats['r5p5']))
     elif opt.action == 'train_patches':
         train_patches(opt)
-        opt.pretrained_model = opt.output_folder + '/model-best_median.ckpt'
+        opt.pretrained_model = [opt.output_folder + '/model-best_median.ckpt']
         eval_stats = inference(opt, minimal_tight_thr=1e-3, opt_tight_thr=1e-3)
         print("{:>10} {:>30} {:>30} {:>20}".format('Scene ID',
                                                    'Median trans error (cm)',
