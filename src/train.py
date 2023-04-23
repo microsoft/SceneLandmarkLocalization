@@ -302,9 +302,11 @@ def train_patches(opt):
         median_angular_error = np.median(eval_stats['angular_error'])
         path = '%s/model-best_median.ckpt' % (opt.output_folder)
 
-        if (median_angular_error < lowest_median_angular_error) or \
-                (~os.path.exists(path) and len(eval_stats['angular_error']) == 0):
+        if (median_angular_error < lowest_median_angular_error):
             lowest_median_angular_error = median_angular_error
+            torch.save(cnn.state_dict(), path)
+        
+        if (~os.path.exists(path) and len(eval_stats['angular_error']) == 0):
             torch.save(cnn.state_dict(), path)
 
         # date time
