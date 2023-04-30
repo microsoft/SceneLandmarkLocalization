@@ -87,7 +87,16 @@ class Indoor6(Dataset):
         
         self.landmark = self.landmark.transpose()
 
+    
+    def original_image_name(self, index):
+        
+        intrinsics = open(os.path.join(self.image_folder,
+                                        self.image_files[index].replace('color.jpg', 'intrinsics.txt')))
+        intrinsics = intrinsics.readline().split()
+    
+        return intrinsics[6]
 
+    
     def _modify_intrinsic(self, index):
         W = None
         H = None
