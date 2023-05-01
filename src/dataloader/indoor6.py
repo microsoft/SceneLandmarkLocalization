@@ -172,28 +172,27 @@ class Indoor6(Dataset):
                   'inv_intrinsics': torch.tensor(K_inv, dtype=torch.float32, requires_grad=False),
                   'landmark3d': torch.tensor(landmark3d[:3], dtype=torch.float32, requires_grad=False),
                   }
+        
+        proj = K @ (C_T_G[:3, :3] @ self.landmark + C_T_G[:3, 3:])
+        landmark2d = proj / proj[2:]
+        output['landmark2d'] = landmark2d[:2]
 
-        if self.mode == 'train':
-            proj = K @ (C_T_G[:3, :3] @ self.landmark + C_T_G[:3, 3:])
-            landmark2d = proj / proj[2:]
-            output['landmark2d'] = landmark2d[:2]
+        inside_patch = (landmark2d[0] < W_modified) * \
+                        (landmark2d[0] >= 0) * \
+                        (landmark2d[1] < H_modified) * \
+                        (landmark2d[1] >= 0)  # L vector
 
-            inside_patch = (landmark2d[0] < W_modified) * \
-                           (landmark2d[0] >= 0) * \
-                           (landmark2d[1] < H_modified) * \
-                           (landmark2d[1] >= 0)  # L vector
+        # visible by propagated colmap visibility and inside image
+        _mask1 = self.visibility[:, self.image_indices[index]] * inside_patch
 
-            # visible by propagated colmap visibility and inside image
-            _mask1 = self.visibility[:, self.image_indices[index]] * inside_patch
+        # outside patch
+        # _mask2 = ~inside_patch
 
-            # outside patch
-            # _mask2 = ~inside_patch
+        # inside image but not visible by colmap
+        _mask3 = (self.visibility[:, self.image_indices[index]] == 0) * inside_patch
 
-            # inside image but not visible by colmap
-            _mask3 = (self.visibility[:, self.image_indices[index]] == 0) * inside_patch
-
-            visibility_mask = 1.0 * _mask1 + 0.5 * _mask3
-            output['visibility'] = visibility_mask
+        visibility_mask = 1.0 * _mask1 + 0.5 * _mask3
+        output['visibility'] = visibility_mask
 
         return output
 

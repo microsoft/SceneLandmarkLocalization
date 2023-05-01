@@ -85,7 +85,7 @@ if __name__ == '__main__':
             output_folder = opt.output_folder
             for scene_id in ['1', '2a', '3', '4a', '5', '6']:
                 opt.scene_id = 'scene' + scene_id
-                opt.pretrained_model = pretrained_folder + 'scene%s.ckpt' % scene_id
+                opt.pretrained_model = [pretrained_folder + 'scene%s.ckpt' % scene_id]
                 opt.output_folder = os.path.join(output_folder, 'scene' + scene_id)
                 eval_stats[opt.scene_id] = inference(opt, minimal_tight_thr=1e-3, opt_tight_thr=1e-3)
 
@@ -108,4 +108,3 @@ if __name__ == '__main__':
                                                        100. * eval_stats['median_trans_error'],
                                                        eval_stats['median_rot_error'],
                                                        eval_stats['r5p5']))
-            
