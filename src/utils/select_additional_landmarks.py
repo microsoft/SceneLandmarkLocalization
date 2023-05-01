@@ -500,7 +500,6 @@ def select_additional_landmarks(opt, minimal_tight_thr=1e-2, opt_tight_thr=5e-3,
                     break
                 
             radius *= 0.5
-            print(radius)
 
         ## Saving
         import pickle
