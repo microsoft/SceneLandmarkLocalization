@@ -33,6 +33,21 @@ def load_landmark_files(landmark_path, visibility_path):
     return landmark, visibility
 
 
+def load_landmark_visibility_files(landmark_path, visibility_path):
+    landmark_file = open(landmark_path, 'r')
+    num_landmark = int(landmark_file.readline())
+    landmark = []
+    for l in range(num_landmark):
+        pl = landmark_file.readline().split()
+        pl = np.array([float(pl[i]) for i in range(len(pl))])
+        landmark.append(pl)
+    landmark = np.asarray(landmark)[:, 1:].T
+
+    visibility = np.loadtxt(visibility_path)
+
+    return landmark, visibility
+
+
 def visualize_keypoint_np(image_, y, x, kp_color):
     image = image_.copy()
     if np.sum(kp_color) == 255:
@@ -466,7 +481,7 @@ def select_additional_landmarks(opt, minimal_tight_thr=1e-2, opt_tight_thr=5e-3,
               % (np.max(points3D_anglespan), np.median(points3D_anglespan), np.mean(points3D_anglespan), np.min(points3D_anglespan)))
         
 
-        num_selected_landmark = 1000
+        num_selected_landmark = opt.num_landmarks
         ## Sort scores
         sorted_indices = np.argsort(points3D_scores)
 
@@ -531,7 +546,8 @@ def select_additional_landmarks(opt, minimal_tight_thr=1e-2, opt_tight_thr=5e-3,
         num_images = len(indoor6_images['train']) + len(indoor6_images['val']) + len(indoor6_images['test'])
         
         SaveLandmarksAndVisibilityMask(selected_landmarks, points, images, indoor6_imagename_to_index, num_images, 
-                                    os.path.join(opt.dataset_folder, opt.scene_id, 'landmarks'), opt.output_format)
+                                    os.path.join(opt.dataset_folder, opt.scene_id), 
+                                    opt.landmark_config, opt.visibility_config, opt.output_format)
         
 
 if __name__ == '__main__':
@@ -548,7 +564,7 @@ if __name__ == '__main__':
         '--num_landmarks', type=int, default=300,
         help='Number of selected landmarks.')
     parser.add_argument(
-        '--output_format', type=str, default='v2',
+        '--output_format', type=str, default='',
         help='Landmark file output.')
     parser.add_argument(
         '--output_folder', type=str, required=True,

@@ -48,7 +48,8 @@ def ComputePerPointAngularSpan(pointInGlobal, image_ids, images):
     return np.arccos(np.clip(1 - 2.0 * np.min(eigH)/np.max(eigH), 0, 1))
 
 
-def SaveLandmarksAndVisibilityMask(selected_landmarks, points3D, images, indoor6_imagename_to_index, num_images, root_path, outformat):
+def SaveLandmarksAndVisibilityMask(selected_landmarks, points3D, images, indoor6_imagename_to_index, num_images, root_path, 
+                                   landmark_config, visibility_config, outformat):
     
     num_landmarks = len(selected_landmarks['id'])
 
@@ -59,9 +60,9 @@ def SaveLandmarksAndVisibilityMask(selected_landmarks, points3D, images, indoor6
             if images[imgid].name in indoor6_imagename_to_index:
                 visibility_mask[i, indoor6_imagename_to_index[images[imgid].name]] = 1
 
-    np.savetxt(os.path.join(root_path, 'visibility-%d%s.txt' % (num_landmarks, outformat)), visibility_mask, fmt='%d')
+    np.savetxt(os.path.join(root_path, '%s%s.txt' % (visibility_config, outformat)), visibility_mask, fmt='%d')
 
-    f = open(os.path.join(root_path, 'landmarks-%d%s.txt' % (num_landmarks, outformat)), 'w')
+    f = open(os.path.join(root_path, '%s%s.txt' % (landmark_config, outformat)), 'w')
     f.write('%d\n' % num_landmarks)
     for i in range(selected_landmarks['xyz'].shape[1]):
         f.write('%d %4.4f %4.4f %4.4f\n' % (i, 
@@ -180,4 +181,5 @@ if __name__ == '__main__':
 
     num_images = len(indoor6_images['train']) + len(indoor6_images['val']) + len(indoor6_images['test'])
     SaveLandmarksAndVisibilityMask(selected_landmarks, points3D, images, indoor6_imagename_to_index, num_images, 
-                                   os.path.join(opt.dataset_folder, opt.scene_id, 'landmarks'), opt.output_format)
+                                   os.path.join(opt.dataset_folder, opt.scene_id), 
+                                   opt.landmark_config, opt.visibility_config, opt.output_format)
