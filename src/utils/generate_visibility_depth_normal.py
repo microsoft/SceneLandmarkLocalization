@@ -84,9 +84,7 @@ if __name__ == '__main__':
             print('indoor6 name: ', data.image_files[idx], ', original name ', original_image_name)        
 
 
-        point3D_ids = images[colmap_index].point3D_ids
-        
-        dmonodense = np.load(os.path.join(monodepth_folder, data.image_files[idx].replace('jpg', 'npy')))
+        point3D_ids = images[colmap_index].point3D_ids                
 
         K = batch['intrinsics'][0].cpu().numpy()
         R = batch['pose_gt'][0, :3, :3].cpu().numpy()
@@ -95,42 +93,45 @@ if __name__ == '__main__':
         xys = images[colmap_index].xys
 
         monoscaled_depth_path = os.path.join(monodepth_folder, data.image_files[idx].replace('.jpg', '.scaled_depth.npy'))
-        if not os.path.exists(monoscaled_depth_path):
-            ds = np.zeros(len(point3D_ids))
-            dmono = np.zeros(len(point3D_ids))
-            validIdx = 0
-
-            for i, k in enumerate(point3D_ids):            
-                if k != -1:
-                    Cp = R @ points[k].xyz + t
-                    xyz = K @ Cp
-                    proj_x = xyz[0] / xyz[2]
-                    proj_y = xyz[1] / xyz[2]
-
-                    px = xys[i][0]
-                    py = xys[i][1]
-
-                    if Cp[2] < 15.0 and proj_x >= 0 and proj_x < W and proj_y >= 0 and proj_y < H and np.abs(proj_x-px) < 5.0 and np.abs(proj_y-py) < 5.0:
-                        ds[validIdx] = Cp[2]
-                        dmono[validIdx] = dmonodense[int(proj_y), int(proj_x)]
-
-                        ## Doing sth here to compute surface normal
-                        validIdx += 1
-            
-            if validIdx < 10:
-                dmonodense_scaled = None
-                count_invalid_images += 1
-            else:
-                ds = ds[:validIdx]
-                dmono = dmono[:validIdx]
-                A = np.array([[np.sum(dmono**2), np.sum(dmono)], [np.sum(dmono), validIdx]])
-                b = np.array([np.sum(dmono*ds), np.sum(ds)])
-                k = np.linalg.solve(A, b)
-
-                dmonodense_scaled = k[0] * dmonodense + k[1]
-                np.save(monoscaled_depth_path, dmonodense_scaled)
-        else:
+        dmonodense_scaled = None
+        if os.path.exists(monoscaled_depth_path):
             dmonodense_scaled = np.load(monoscaled_depth_path)
+        # else:
+            # dmonodense = np.load(os.path.join(monodepth_folder, data.image_files[idx].replace('jpg', 'npy')))
+
+            # ds = np.zeros(len(point3D_ids))
+            # dmono = np.zeros(len(point3D_ids))
+            # validIdx = 0
+
+            # for i, k in enumerate(point3D_ids):            
+            #     if k != -1:
+            #         Cp = R @ points[k].xyz + t
+            #         xyz = K @ Cp
+            #         proj_x = xyz[0] / xyz[2]
+            #         proj_y = xyz[1] / xyz[2]
+
+            #         px = xys[i][0]
+            #         py = xys[i][1]
+
+            #         if Cp[2] < 15.0 and proj_x >= 0 and proj_x < W and proj_y >= 0 and proj_y < H and np.abs(proj_x-px) < 5.0 and np.abs(proj_y-py) < 5.0:
+            #             ds[validIdx] = Cp[2]
+            #             dmono[validIdx] = dmonodense[int(proj_y), int(proj_x)]
+
+            #             ## Doing sth here to compute surface normal
+            #             validIdx += 1
+            
+            # if validIdx < 10:
+            #     dmonodense_scaled = None
+            #     count_invalid_images += 1
+            # else:
+            #     ds = ds[:validIdx]
+            #     dmono = dmono[:validIdx]
+            #     A = np.array([[np.sum(dmono**2), np.sum(dmono)], [np.sum(dmono), validIdx]])
+            #     b = np.array([np.sum(dmono*ds), np.sum(ds)])
+            #     k = np.linalg.solve(A, b)
+
+            #     dmonodense_scaled = k[0] * dmonodense + k[1]
+            #     np.save(monoscaled_depth_path, dmonodense_scaled)            
 
         if dmonodense_scaled is not None:
             Cplm = batch['landmark3d'][0].cpu().numpy()            
