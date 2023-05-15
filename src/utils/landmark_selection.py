@@ -91,6 +91,8 @@ if __name__ == '__main__':
         help='Landmark file output.')
 
     opt = parser.parse_args()
+    opt.landmark_config = "landmarks/landmarks-%d" % (opt.num_landmarks)
+    opt.visibility_config = "landmarks/visibility-%d" % (opt.num_landmarks)
 
     scene = opt.scene_id
     path = os.path.join(opt.dataset_folder, 'indoor6-colmap/%s-tr/sparse/0/' % scene)
@@ -165,7 +167,6 @@ if __name__ == '__main__':
 
             if nselected == opt.num_landmarks:
                 break
-            
         radius *= 0.5
 
     ## Saving
