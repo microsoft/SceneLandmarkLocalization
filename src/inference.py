@@ -246,3 +246,105 @@ def inference(opt, minimal_tight_thr=1e-2, opt_tight_thr=5e-3, mode='test'):
 
 
     return metrics_output
+
+
+def inference_landmark_stats(opt, mode='test'):
+    import pickle
+
+    PRETRAINED_MODEL = opt.pretrained_model
+
+    device = opt.gpu_device
+
+    test_dataset = Indoor6(landmark_idx=np.arange(opt.landmark_indices[0], opt.landmark_indices[-1]),
+                           scene_id=opt.scene_id,
+                           mode=mode,
+                           root_folder=opt.dataset_folder,
+                           input_image_downsample=2,
+                           landmark_config=opt.landmark_config,
+                           visibility_config=opt.visibility_config,
+                           skip_image_index=1)
+
+    test_dataloader = DataLoader(dataset=test_dataset, num_workers=1, batch_size=1, shuffle=False, pin_memory=True)
+
+    num_landmarks = test_dataset.landmark.shape[1]
+
+    cnns = []
+    nLandmarks = opt.landmark_indices
+    num_landmarks = opt.landmark_indices[-1] - opt.landmark_indices[0]
+
+    for idx, pretrained_model in enumerate(PRETRAINED_MODEL):
+        if opt.model == 'efficientnet':
+            cnn = EfficientNetSLD(num_landmarks=nLandmarks[idx+1]-nLandmarks[idx], output_downsample=opt.output_downsample).to(device=device)
+
+        cnn.load_state_dict(torch.load(pretrained_model))
+        cnn = cnn.to(device=device)
+        cnn.eval()
+        
+        # Adding pretrained model
+        cnns.append(cnn)
+
+    peak_threshold = 2e-1
+
+    SINGLE_LANDMARK_STATS = {'image_idx': [],
+                            'pixel_error': [],
+                            }
+    landmark_stats = [copy.deepcopy(SINGLE_LANDMARK_STATS) for _ in range(num_landmarks)]
+    img_idx = 0
+
+    with torch.no_grad():
+
+        ## Only works for indoor-6
+        indoor6W = 640 // opt.output_downsample
+        indoor6H = 352 // opt.output_downsample
+        HH, WW = torch.meshgrid(torch.arange(indoor6H), torch.arange(indoor6W))
+        WW = WW.reshape(1, 1, indoor6H, indoor6W).to('cuda')
+        HH = HH.reshape(1, 1, indoor6H, indoor6W).to('cuda')
+
+        for idx, batch in enumerate(tqdm(test_dataloader)):
+
+            image = batch['image'].to(device=device)
+            B, _, H, W = image.shape
+            landmark2d = batch['intrinsics'] @ batch['landmark3d'].reshape(B, 3, num_landmarks)
+            landmark2d /= landmark2d[:, 2:].clone()
+            landmark2d = landmark2d.numpy()
+
+            pred_heatmap = []
+            for cnn in cnns:
+                pred = cnn(image)
+                pred_heatmap.append(pred['1'])
+
+            pred_heatmap = torch.cat(pred_heatmap, axis=1)
+            pred_heatmap *= (pred_heatmap > peak_threshold).float()
+
+            ## Compute 2D location of landmarks
+            P = torch.max(torch.max(pred_heatmap, dim=3)[0], dim=2)[0]
+            pred_normalized_heatmap = pred_heatmap / (torch.sum(pred_heatmap, axis=(2, 3), keepdim=True) + 1e-4)
+            projx = torch.sum(WW * pred_normalized_heatmap, axis=(2, 3)).reshape(B, 1, num_landmarks)
+            projy = torch.sum(HH * pred_normalized_heatmap, axis=(2, 3)).reshape(B, 1, num_landmarks)
+            xy1 = torch.cat((projx, projy, torch.ones_like(projx)), axis=1)
+            P = P.cpu().numpy()
+            xy1 = xy1.cpu().numpy()
+
+            ## Compute error
+            for b in range(B):                                
+                for l in range(num_landmarks):
+                    if P[b,l] > peak_threshold:
+                        pixel_error = np.linalg.norm(landmark2d[b][:2, l] - 
+                                                     opt.output_downsample * xy1[b][:2, l])
+                        landmark_stats[l]['pixel_error'].append(pixel_error)
+                        landmark_stats[l]['image_idx'].append(test_dataset.image_indices[img_idx])
+                img_idx += 1
+        
+        landmark_stats_np = np.zeros((num_landmarks, 5))
+        for l in range(num_landmarks):
+            landmark_stats_np[l, 0] = l
+            landmark_stats_np[l, 1] = len(landmark_stats[l]['image_idx'])
+            if landmark_stats_np[l, 1] > 0:
+                pixel_error = np.array(landmark_stats[l]['pixel_error'])
+                landmark_stats_np[l, 2] = np.mean(pixel_error)
+                landmark_stats_np[l, 3] = np.median(pixel_error)
+                landmark_stats_np[l, 4] = np.max(pixel_error)
+        np.savetxt(os.path.join(opt.output_folder, 'landmark_stats.txt'), landmark_stats_np)
+        pickle.dump(landmark_stats, open(os.path.join(opt.output_folder, 'landmark_stats.pkl'), 'wb'))
+
+    return

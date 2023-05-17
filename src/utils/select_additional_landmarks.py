@@ -453,7 +453,7 @@ def select_additional_landmarks(opt, minimal_tight_thr=1e-2, opt_tight_thr=5e-3,
             # timespan = ComputePerPointTimeSpan(image_ids, images)
             anglespan = ComputePerPointAngularSpan(pointInGlobal, image_ids, images)
 
-            if depthMean < 5.0 and trackLength > 5:
+            if depthMean < 15.0 and trackLength > 3:
                 depthScore = min(1.0, depthStd / depthMean) 
                 trackLengthScore = 0.25 * np.log2(trackLength)
                 

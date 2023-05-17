@@ -11,7 +11,7 @@ from utils.select_additional_landmarks import load_landmark_visibility_files
 def save_landmark_visibility_mask(landmarks, visibility_mask, 
                                   landmark_path, visibility_path):
     
-    num_landmarks = landmarks.shape[0]
+    num_landmarks = landmarks.shape[1]
 
     np.savetxt(visibility_path, visibility_mask, fmt='%d')
 
@@ -69,9 +69,10 @@ if __name__ == '__main__':
     ls = np.concatenate(ls, axis=1)
     vs = np.concatenate(vs, axis=0)
 
-    output_landmark_path = os.path.join(opt.dataset_folder, opt.scene_id, 'landmarks/landmarks-%d_%s.txt' % (num_landmarks, opt.output_format))
-    output_visibility_path = os.path.join(opt.dataset_folder, opt.scene_id, 'landmarks/visibility-%d_%s.txt' % (num_landmarks, opt.output_format))
+    output_landmark_path = os.path.join(opt.dataset_folder, opt.scene_id, 'landmarks/landmarks-%d%s.txt' % (num_landmarks, opt.output_format))
+    
+    if 'depth_normal' in opt.visibility_config[0]:
+        output_visibility_path = os.path.join(opt.dataset_folder, opt.scene_id, 'landmarks/visibility-%d%s_depth_normal.txt' % (num_landmarks, opt.output_format))
+    else:
+        output_visibility_path = os.path.join(opt.dataset_folder, opt.scene_id, 'landmarks/visibility-%d%s.txt' % (num_landmarks, opt.output_format))
     save_landmark_visibility_mask(ls, vs, output_landmark_path, output_visibility_path)
-
-
-
