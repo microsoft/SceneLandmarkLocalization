@@ -102,7 +102,8 @@ def inference(opt, minimal_tight_thr=1e-2, opt_tight_thr=5e-3, mode='test'):
                            input_image_downsample=2,
                            landmark_config=opt.landmark_config,
                            visibility_config=opt.visibility_config,
-                           skip_image_index=1)
+                           skip_image_index=1,
+                           use_precomputed_focal_length=opt.use_precomputed_focal_length)
 
     test_dataloader = DataLoader(dataset=test_dataset, num_workers=1, batch_size=1, shuffle=False, pin_memory=True)
 
