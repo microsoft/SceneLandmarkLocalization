@@ -44,6 +44,8 @@ if __name__ == '__main__':
         '--action', type=str, default='test',
         help='train/train_patches/test')
     parser.add_argument(
+        '--use_precomputed_focal_length', type=int, default=0)
+    parser.add_argument(
         '--training_batch_size', type=int, default=8,
         help='Batch size used during training.')
 

@@ -24,7 +24,8 @@ class Indoor6(Dataset):
                  landmark_idx=[None], skip_image_index=1,
                  input_image_downsample=1, gray_image_output=False,
                  landmark_config='landmarks/landmarks-50',
-                 visibility_config='landmarks/visibility-50'):
+                 visibility_config='landmarks/visibility-50',
+                 use_precomputed_focal_length=False):
         super(Indoor6, self).__init__()
 
         self.to_tensor = transforms.ToTensor()
@@ -86,6 +87,12 @@ class Indoor6(Dataset):
             self.visibility = self.visibility[landmark_idx]
         
         self.landmark = self.landmark.transpose()
+        
+        ## Precomputed fixed focal length
+        self.precomputed_focal_length = None
+        if use_precomputed_focal_length:
+            PRECOMPUTED_FOCAL_LENGTH = {'scene1': 900, 'scene2a': 1100, 'scene3': 900, 'scene4a': 900, 'scene5': 900, 'scene6': 900}
+            self.precomputed_focal_length = PRECOMPUTED_FOCAL_LENGTH[scene_id]
 
     
     def original_image_name(self, index):
@@ -97,7 +104,7 @@ class Indoor6(Dataset):
         return intrinsics[6]
 
     
-    def _modify_intrinsic(self, index):
+    def _modify_intrinsic(self, index, use_precomputed_focal_length=False):
         W = None
         H = None
         K = None
@@ -106,8 +113,7 @@ class Indoor6(Dataset):
         while K_inv is None:
             try:
                 intrinsics = open(os.path.join(self.image_folder,
-                                               self.image_files[index].replace('color.jpg', 'intrinsics.txt')))
-
+                                               self.image_files[index].replace('color.jpg', 'intrinsics.txt')))                
                 intrinsics = intrinsics.readline().split()
 
                 W = int(intrinsics[0]) // (self.image_downsampled * 32) * 32
@@ -116,8 +122,12 @@ class Indoor6(Dataset):
                 scale_factor_x = W / float(intrinsics[0])
                 scale_factor_y = H / float(intrinsics[1])
 
-                fx = float(intrinsics[2]) * scale_factor_x
-                fy = float(intrinsics[2]) * scale_factor_y
+                if use_precomputed_focal_length:                    
+                    fx = self.precomputed_focal_length * scale_factor_x
+                    fy = self.precomputed_focal_length * scale_factor_y
+                else:
+                    fx = float(intrinsics[2]) * scale_factor_x
+                    fy = float(intrinsics[2]) * scale_factor_y
 
                 cx = float(intrinsics[3]) * scale_factor_x
                 cy = float(intrinsics[4]) * scale_factor_y
@@ -160,7 +170,7 @@ class Indoor6(Dataset):
         return pose_s
 
     def __getitem__(self, index):
-        K, K_inv, W_modified, H_modified = self._modify_intrinsic(index)
+        K, K_inv, W_modified, H_modified = self._modify_intrinsic(index, use_precomputed_focal_length=False if self.precomputed_focal_length is None else True)
         color_tensor = self._load_and_resize_image(index, W_modified, H_modified)
         C_T_G = self._load_pose(index)
 
