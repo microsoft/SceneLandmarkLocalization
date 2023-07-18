@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 import logging
 import matplotlib.pyplot as plt
 import numpy as np
@@ -310,8 +310,8 @@ def train_patches(opt):
             torch.save(cnn.state_dict(), path)
 
         # date time
-        ts = datetime.datetime.now().timestamp()
-        dt = datetime.datetime.fromtimestamp(ts)
+        ts = datetime.now().timestamp()
+        dt = datetime.fromtimestamp(ts)
         datestring = dt.strftime("%Y-%m-%d_%H-%M-%S")
 
         # Print, log and update plot
