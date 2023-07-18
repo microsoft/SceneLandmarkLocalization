@@ -49,10 +49,10 @@ if __name__ == '__main__':
 
     opt = parser.parse_args()
 
-    print('scene_id: ', opt.scene_id)
-    print('action: ', opt.action)
-    print('training_batch_size: ', opt.training_batch_size)
-    print('output downsample: ', opt.output_downsample)
+    #print('scene_id: ', opt.scene_id)
+    #print('action: ', opt.action)
+    #print('training_batch_size: ', opt.training_batch_size)
+    #print('output downsample: ', opt.output_downsample)
 
     if opt.action == 'train':
         train(opt)
@@ -101,15 +101,15 @@ if __name__ == '__main__':
                                                                   eval_stats[x]['median_rot_error'],
                                                                   eval_stats[x]['r5p5']))
         else:
+
             eval_stats = inference(opt, minimal_tight_thr=1e-3, opt_tight_thr=1e-3)
-            # print("{:>10} {:>30} {:>30} {:>20}".format('Scene ID',
-            #                                            'Median trans error (cm)',
-            #                                            'Median rotation error (deg)',
-            #                                            'Recall 5cm5deg (%)'))
-            # print("{:>10} {:>30.4} {:>30.4} {:>20.2%}".format(opt.scene_id,
-            #                                            100. * eval_stats['median_trans_error'],
-            #                                            eval_stats['median_rot_error'],
-            #                                            eval_stats['r5p5']))
+            metricsFilename = opt.output_folder + '/metrics.txt'
+            print(metricsFilename)
+            fd = open(metricsFilename, "w")
+            fd.write("%f\n" % (eval_stats['r5p5']))
+            fd.write("%f\n" % (eval_stats['speed']))
+            fd.close()
+
             print("{:>10} {:>30} {:>30} {:>20} {:>15} {:>15} {:>15} {:>15} {:>20} {:>20}".format('Scene ID',
                                                                             'Median trans error (cm)',
                                                                             'Median rotation error (deg)',
