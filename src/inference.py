@@ -4,6 +4,8 @@ import os
 import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+import random
+from datetime import datetime
 
 from dataloader.indoor6 import Indoor6
 from models.efficientlitesld import EfficientNetSLD
@@ -91,6 +93,8 @@ def compute_pose(G_p_f, C_b_f_hm, weights, minimal_tight_thr, opt_tight_thr):
 
 def inference(opt, minimal_tight_thr=1e-2, opt_tight_thr=5e-3, mode='test'):
 
+    # random.seed(datetime.now().timestamp())
+
     PRETRAINED_MODEL = opt.pretrained_model
 
     device = opt.gpu_device
@@ -124,7 +128,7 @@ def inference(opt, minimal_tight_thr=1e-2, opt_tight_thr=5e-3, mode='test'):
         # Adding pretrained model
         cnns.append(cnn)
 
-    peak_threshold = 2e-1
+    peak_threshold = 3e-1
     img_id = 0
 
     METRICS_LOGGING = {'image_name': '',
@@ -146,81 +150,77 @@ def inference(opt, minimal_tight_thr=1e-2, opt_tight_thr=5e-3, mode='test'):
         WW = WW.reshape(1, 1, indoor6H, indoor6W).to('cuda')
         HH = HH.reshape(1, 1, indoor6H, indoor6W).to('cuda')
 
-        for idx, batch in enumerate(tqdm(test_dataloader)):
+        with tqdm(test_dataloader) as tq:
+            for idx, batch in enumerate(tq):
+            #for idx, batch in enumerate(tqdm(test_dataloader)):
 
-            image = batch['image'].to(device=device)
-            B, _, H, W = image.shape
+                image = batch['image'].to(device=device)
+                B, _, H, W = image.shape
 
-            K_inv = batch['inv_intrinsics'].to(device=device)
-            C_T_G_gt = batch['pose_gt'].cpu().numpy()
+                K_inv = batch['inv_intrinsics'].to(device=device)
+                C_T_G_gt = batch['pose_gt'].cpu().numpy()
 
-            landmark2d = batch['intrinsics'] @ batch['landmark3d'].reshape(B, 3, num_landmarks)
-            landmark2d /= landmark2d[:, 2:].clone()
-            landmark2d = landmark2d.numpy()
+                landmark2d = batch['intrinsics'] @ batch['landmark3d'].reshape(B, 3, num_landmarks)
+                landmark2d /= landmark2d[:, 2:].clone()
+                landmark2d = landmark2d.numpy()
 
+                pred_heatmap = []
+                for cnn in cnns:
+                    pred = cnn(image)
+                    pred_heatmap.append(pred['1'])
 
-            pred_heatmap = []
-            for cnn in cnns:
-                pred = cnn(image)
-                pred_heatmap.append(pred['1'])
-
-            pred_heatmap = torch.cat(pred_heatmap, axis=1)
-            pred_heatmap *= (pred_heatmap > peak_threshold).float()
-
-            K_inv[:, :, :2] *= opt.output_downsample
-
-            ## Compute 2D location of landmarks
-            P = torch.max(torch.max(pred_heatmap, dim=3)[0], dim=2)[0]
-            pred_normalized_heatmap = pred_heatmap / (torch.sum(pred_heatmap, axis=(2, 3), keepdim=True) + 1e-4)
-            projx = torch.sum(WW * pred_normalized_heatmap, axis=(2, 3)).reshape(B, 1, num_landmarks)
-            projy = torch.sum(HH * pred_normalized_heatmap, axis=(2, 3)).reshape(B, 1, num_landmarks)
-            xy1 = torch.cat((projx, projy, torch.ones_like(projx)), axis=1)
-            uv1 = K_inv @ xy1
-            C_B_f = uv1 / torch.sqrt(torch.sum(uv1 ** 2, axis=1, keepdim=True))
-            C_B_f = C_B_f.cpu().numpy()
-            P = P.cpu().numpy()
-            xy1 = xy1.cpu().numpy()
-
-            ## Compute error
-            for b in range(B):
-                # G_p_f, C_b_f, weights, pixel_error, angular_error = compute_2d3d(
-                #                                         opt, pred_heatmap[b].cpu().numpy(), 
-                #                                         peak_threshold, landmark2d[b], landmark_data,
-                #                                         batch['landmark3d'][b].cpu().numpy(),
-                #                                         H_hm, W_hm, K_inv[b].cpu().numpy())
-
-                Pb = P[b]>peak_threshold
-                G_p_f = landmark_data[:, Pb]
-                C_b_f = C_B_f[b][:, Pb]                
-                weights = P[b][Pb]                
-                xy1b = xy1[b][:2, Pb]                
-
-                pnp_inlier, C_T_G_hat = compute_pose(G_p_f, C_b_f, weights,
-                                                    minimal_tight_thr, opt_tight_thr)
+                pred_heatmap = torch.cat(pred_heatmap, axis=1)
+                pred_heatmap *= (pred_heatmap > peak_threshold).float()
+                pred_heatmap *= pred_heatmap
                 
-                rot_err, trans_err = 180., 1800.
-                if pnp_inlier >= 4:
-                    rot_err, trans_err = compute_error(C_T_G_gt[b][:3, :3], C_T_G_gt[b][:3, 3],
-                                                       C_T_G_hat[:3, :3], C_T_G_hat[:3, 3])
-                
-                ## Logging information                
-                pixel_error = np.linalg.norm(landmark2d[b][:2, Pb] - opt.output_downsample * xy1b, axis=0)                
-                C_b_f_gt = batch['landmark3d'][b]
-                C_b_f_gt = torch.nn.functional.normalize(C_b_f_gt, dim=0).cpu().numpy()
-                angular_error = np.arccos(np.clip(np.sum(C_b_f * C_b_f_gt[:, Pb], axis=0), -1, 1)) * 180. / np.pi
+                K_inv[:, :, :2] *= opt.output_downsample
 
-                m = copy.deepcopy(METRICS_LOGGING)
-                m['image_name'] = test_dataset.image_files[img_id]                
-                m['pixel_error'] = pixel_error 
-                m['angular_error'] = angular_error
-                m['heatmap_peak'] = weights
-                m['rot_err_all'] = np.array([rot_err])
-                m['trans_err_all'] = np.array([trans_err])
+                ## Compute 2D location of landmarks
+                P = torch.max(torch.max(pred_heatmap, dim=3)[0], dim=2)[0]
+                pred_normalized_heatmap = pred_heatmap / (torch.sum(pred_heatmap, axis=(2, 3), keepdim=True) + 1e-4)
+                projx = torch.sum(WW * pred_normalized_heatmap, axis=(2, 3)).reshape(B, 1, num_landmarks)
+                projy = torch.sum(HH * pred_normalized_heatmap, axis=(2, 3)).reshape(B, 1, num_landmarks)
+                xy1 = torch.cat((projx, projy, torch.ones_like(projx)), axis=1)
+                uv1 = K_inv @ xy1
+                C_B_f = uv1 / torch.sqrt(torch.sum(uv1 ** 2, axis=1, keepdim=True))
+                C_B_f = C_B_f.cpu().numpy()
+                P = P.cpu().numpy()
+                xy1 = xy1.cpu().numpy()
                 
-                test_image_logging.append(m)
-                
-                img_id += 1
+                ## Compute error
+                for b in range(B):
+                    Pb = P[b]>peak_threshold
+                    G_p_f = landmark_data[:, Pb]
+                    C_b_f = C_B_f[b][:, Pb]
+                    weights = P[b][Pb]
+                    xy1b = xy1[b][:2, Pb]
 
+                    pnp_inlier, C_T_G_hat = compute_pose(G_p_f, C_b_f, weights,
+                                                        minimal_tight_thr, opt_tight_thr)
+
+                    rot_err, trans_err = 180., 1800.
+                    if pnp_inlier >= 4:
+                        rot_err, trans_err = compute_error(C_T_G_gt[b][:3, :3], C_T_G_gt[b][:3, 3],
+                                                           C_T_G_hat[:3, :3], C_T_G_hat[:3, 3])
+
+                    ## Logging information
+                    pixel_error = np.linalg.norm(landmark2d[b][:2, Pb] - opt.output_downsample * xy1b, axis=0)
+                    C_b_f_gt = batch['landmark3d'][b]
+                    C_b_f_gt = torch.nn.functional.normalize(C_b_f_gt, dim=0).cpu().numpy()
+                    angular_error = np.arccos(np.clip(np.sum(C_b_f * C_b_f_gt[:, Pb], axis=0), -1, 1)) * 180. / np.pi
+
+                    m = copy.deepcopy(METRICS_LOGGING)
+                    m['image_name'] = test_dataset.image_files[img_id]
+                    m['pixel_error'] = pixel_error
+                    m['angular_error'] = angular_error
+                    m['heatmap_peak'] = weights
+                    m['rot_err_all'] = np.array([rot_err])
+                    m['trans_err_all'] = np.array([trans_err])
+                    test_image_logging.append(m)
+                    img_id += 1
+
+    elapsedtime = tq.format_dict["elapsed"]
+    processing_speed = len(test_dataset)/elapsedtime
 
     metrics_output = {'angular_error': [], 
                       'pixel_error': [], 
@@ -243,8 +243,7 @@ def inference(opt, minimal_tight_thr=1e-2, opt_tight_thr=5e-3, mode='test'):
     metrics_output['r10p10'] = np.sum((metrics_output['rot_err_all'] < 10) * (metrics_output['trans_err_all'] < 0.1)) / len(test_dataset)
     metrics_output['median_rot_error'] = np.median(metrics_output['rot_err_all'])
     metrics_output['median_trans_error'] = np.median(metrics_output['trans_err_all'])
-
-
+    metrics_output['speed'] = processing_speed
     return metrics_output
 
 
