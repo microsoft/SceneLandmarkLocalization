@@ -172,6 +172,17 @@ def inference(opt, minimal_tight_thr=1e-2, opt_tight_thr=5e-3, mode='test'):
 
                 pred_heatmap = torch.cat(pred_heatmap, axis=1)
                 pred_heatmap *= (pred_heatmap > peak_threshold).float()
+
+                # tmp = torch.sqrt(pred_heatmap)
+                #
+                # w^{1.5}
+                # pred_heatmap *= tmp
+                #
+                # w^{2.5}
+                # pred_heatmap *= tmp
+                # pred_heatmap *= pred_heatmap
+
+                # w^2
                 pred_heatmap *= pred_heatmap
                 
                 K_inv[:, :, :2] *= opt.output_downsample
@@ -193,7 +204,11 @@ def inference(opt, minimal_tight_thr=1e-2, opt_tight_thr=5e-3, mode='test'):
                     Pb = P[b]>peak_threshold
                     G_p_f = landmark_data[:, Pb]
                     C_b_f = C_B_f[b][:, Pb]
+
+                    ## MAKING THIS CHANGE FOR ABLATION STUDY IN PAPER: PLEASE REMOVE LATER!
+                    ## weights = np.ones_like(P[b][Pb])
                     weights = P[b][Pb]
+
                     xy1b = xy1[b][:2, Pb]
 
                     pnp_inlier, C_T_G_hat = compute_pose(G_p_f, C_b_f, weights,
