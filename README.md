@@ -21,7 +21,7 @@ IEEE/CVF Conference on Computer Vision and Pattern Recognition (**CVPR**), 2022
 [pdf](paper/DoEtalCVPR2022.pdf) &nbsp; [video](https://www.youtube.com/watch?v=HM2yLCLz5nY) 
 
 **Indoor6 Dataset**  
-[download](https://drive.google.com/drive/folders/1nTAiDbQzhT3WI6Cvj0MdRv2MTcB0t3hw?usp=sharing)
+[download](https://drive.google.com/drive/folders/1w7Adnd6MXmNOacT072JnQ6emHUeLrD71?usp=drive_link)
 
 ## Bibtex
 If you find our work to be useful in your research, please consider citing our paper:
@@ -53,15 +53,15 @@ contains illumination variations as the images span multiple days and different 
 
 ![indoor6_sfm](media/indoor6_sfm.png)
 Indoor-6 dataset SfM reconstructions. Train/val/test splits and download urls per scene are listed below:
-* [scene1](https://drive.google.com/file/d/1SJeaUJJsir4WqrV_4ZkYgVqhGwWeM0eZ/view?usp=sharing) (6289/798/799 images)
+* [scene1](https://drive.google.com/file/d/1AJhPh9nnZO0HJyxuXXZdtKtA7kFRi3LQ/view?usp=drive_link) (6289/798/799 images)
 * <strike>scene2 (3021/283/284 images)</strike> 
-* [scene2a](https://drive.google.com/file/d/1_6ry9TTpruw6gOI5WJmiprI4l3gb-YN2/view?usp=sharing) (4890/256/257 images)
-* [scene3](https://drive.google.com/file/d/1wyJhQbzLEs0_Fhtrdegi1GxBkZlKiamn/view?usp=sharing) (4181/313/315 images)
+* [scene2a](https://drive.google.com/file/d/1DgTQ7fflZJ7DdbHDRZF-6gXdB_vJF7fY/view?usp=drive_link) (4890/256/257 images)
+* [scene3](https://drive.google.com/file/d/12aER7rQkvGS_DPeugTHo_Ma_Fi7JuflS/view?usp=drive_link) (4181/313/315 images)
 * <strike>scene4 (1942/272/272 images)</strike>
-* [scene4a](https://drive.google.com/file/d/1ywLifH9-RAedjM-oCAR2CshHEinwawJz/view?usp=sharing) (2285/158/158 images)
-* [scene5](https://drive.google.com/file/d/1mdlz-uc9D6eS7MJtjf_09Wof0PAoaqj4/view?usp=sharing) (4946/512/424 images)
-* [scene6](https://drive.google.com/file/d/1cuHbm_Sdy3hbUJLdFrYftguUUY_35bYc/view?usp=sharing) (1761/322/323 images)
-* [colmap](https://drive.google.com/file/d/1bhvHItLYuITnC7UEi-_F72maTvS1bXBY/view?usp=share_link) (colmap reconstructions for all scenes.)
+* [scene4a](https://drive.google.com/file/d/1gibneq5ixZ0lmeNAYTmY4Mh8a244T2nl/view?usp=drive_link) (2285/158/158 images)
+* [scene5](https://drive.google.com/file/d/18wHn_69-eV22N4I8R0rWQkcSQ3EtCYMX/view?usp=drive_link) (4946/512/424 images)
+* [scene6](https://drive.google.com/file/d/1mZYnoKo37KXRjREK5CKs5IzDox2G3Prt/view?usp=drive_link) (1761/322/323 images)
+* [colmap](https://drive.google.com/file/d/1oMo552DYo2U5Fvjm5MrTYPMqpMjXEf7m/view?usp=drive_link) (colmap reconstructions for all scenes.)
 
 **Note**: We added two new scenes (`scene2a` and `scene4a`) to the Indoor-6 dataset after our CVPR 2022 paper was published. This was because we were unable to release `scene2` and `scene4` from the original dataset due to privacy reasons. 
 The two new scenes have been included as replacements. Please refer to our 3DV 2024 paper for a quantitative evaluation of our method and several baselines on the latest version of the dataset.
@@ -99,7 +99,9 @@ The source code expects the following directory structure.
 ```
 
 * Download the indoor6 dataset and place the contents in the `/data/indoor6/` folder, as indicated above.
-* Download the pretrained models for `SLD-star` (see below) from our 3DV 2024 paper and place them in the `/data/checkpoints` folder, as indicated above.
+* Download the pretrained models for `SLD-star` (see below) from our 3DV 2024 paper and place them in the `/data/checkpoints` folder, as indicated above.  
+[pretrained models](https://drive.google.com/file/d/1s8bUgAuy2LX4QMcKE8yKz6JRyhL3JgxZ/view?usp=drive_link)
+
 * Clone this repo into `/SceneLandmarkLocalization`.
 * Finally, create the folder `/data/outputs` for storing trained models and other files that will be created when training your own models using the training routine.
 
