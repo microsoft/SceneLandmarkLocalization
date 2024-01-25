@@ -263,7 +263,7 @@ def P3PKe_Ransac(G_p_f, C_b_f_hm, w, thres=0.01):
     Nsample=4
     inlier_score_best=0
 
-    for iter in range(10):
+    for iter in range(125): #old value was 10
         ## Weighted sampling based on weight factor
         min_set = np.argpartition(np.exp(w) * np.random.rand(w.shape[0]), -Nsample)[-Nsample:]
         C_R_G_hat, C_t_G_hat = P3PKe(C_b_f_hm[:, min_set], G_p_f[:, min_set], inlier_thres=thres)

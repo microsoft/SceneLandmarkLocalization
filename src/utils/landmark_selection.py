@@ -48,7 +48,8 @@ def ComputePerPointAngularSpan(pointInGlobal, image_ids, images):
     return np.arccos(np.clip(1 - 2.0 * np.min(eigH)/np.max(eigH), 0, 1))
 
 
-def SaveLandmarksAndVisibilityMask(selected_landmarks, points3D, images, indoor6_imagename_to_index, num_images, root_path):
+def SaveLandmarksAndVisibilityMask(selected_landmarks, points3D, images, indoor6_imagename_to_index, num_images, root_path, 
+                                   landmark_config, visibility_config, outformat):
     
     num_landmarks = len(selected_landmarks['id'])
 
@@ -59,9 +60,9 @@ def SaveLandmarksAndVisibilityMask(selected_landmarks, points3D, images, indoor6
             if images[imgid].name in indoor6_imagename_to_index:
                 visibility_mask[i, indoor6_imagename_to_index[images[imgid].name]] = 1
 
-    np.savetxt(os.path.join(root_path, 'visibility-%dv2.txt' % num_landmarks), visibility_mask)
+    np.savetxt(os.path.join(root_path, '%s%s.txt' % (visibility_config, outformat)), visibility_mask, fmt='%d')
 
-    f = open(os.path.join(root_path, 'landmarks-%dv2.txt' % num_landmarks), 'w')
+    f = open(os.path.join(root_path, '%s%s.txt' % (landmark_config, outformat)), 'w')
     f.write('%d\n' % num_landmarks)
     for i in range(selected_landmarks['xyz'].shape[1]):
         f.write('%d %4.4f %4.4f %4.4f\n' % (i, 
@@ -85,8 +86,13 @@ if __name__ == '__main__':
     parser.add_argument(
         '--num_landmarks', type=int, default=300,
         help='Number of selected landmarks.')
+    parser.add_argument(
+        '--output_format', type=str, default='v2',
+        help='Landmark file output.')
 
     opt = parser.parse_args()
+    opt.landmark_config = "landmarks/landmarks-%d" % (opt.num_landmarks)
+    opt.visibility_config = "landmarks/visibility-%d" % (opt.num_landmarks)
 
     scene = opt.scene_id
     path = os.path.join(opt.dataset_folder, 'indoor6-colmap/%s-tr/sparse/0/' % scene)
@@ -95,6 +101,7 @@ if __name__ == '__main__':
     ## Max number of sessions
     sessions = {}
     for i in images:
+        print(images[i].name)
         session_id = int(images[i].name.split('-')[0])
         sessions[session_id] = 1
     maxSession = len(sessions)
@@ -120,11 +127,12 @@ if __name__ == '__main__':
             trackLengthScore = 0.25 * np.log2(trackLength)
             timeSpanScore = timespan / maxSession
             
-            if timespan >= 1 and depthMean < 5.0 and anglespan > 0.5:
+            if timespan >= 1 and depthMean < 10.0 and anglespan > 0.3:
                 points3D_ids[validIdx] = k
                 points3D_scores[validIdx] = depthScore + trackLengthScore + timeSpanScore + anglespan
                 validIdx += 1                
         
+    
     ## Sort scores
     points3D_ids = points3D_ids[:validIdx]
     points3D_scores = points3D_scores[:validIdx]
@@ -142,7 +150,7 @@ if __name__ == '__main__':
     selected_landmarks['score'][0] = points3D_scores[sorted_indices[-1]]
 
     nselected = 1
-    radius = 3.0
+    radius = 5.0
 
     while nselected < opt.num_landmarks:
         for i in reversed(sorted_indices):
@@ -159,7 +167,6 @@ if __name__ == '__main__':
 
             if nselected == opt.num_landmarks:
                 break
-            
         radius *= 0.5
 
     ## Saving
@@ -168,11 +175,12 @@ if __name__ == '__main__':
 
     for i, f in enumerate(indoor6_images['train']):
         image_name = open(os.path.join(opt.dataset_folder, 
-                                       opt.scene_id, 'images', 
-                                       f.replace('color.jpg', 
-                                                 'intrinsics.txt'))).readline().split(' ')[7][:-1]
+                                    opt.scene_id, 'images', 
+                                    f.replace('color.jpg', 
+                                                'intrinsics.txt'))).readline().split(' ')[-1][:-1]
         indoor6_imagename_to_index[image_name] = indoor6_images['train_idx'][i]
 
     num_images = len(indoor6_images['train']) + len(indoor6_images['val']) + len(indoor6_images['test'])
     SaveLandmarksAndVisibilityMask(selected_landmarks, points3D, images, indoor6_imagename_to_index, num_images, 
-                                   os.path.join(opt.dataset_folder, opt.scene_id, 'landmarks'))
+                                   os.path.join(opt.dataset_folder, opt.scene_id), 
+                                   opt.landmark_config, opt.visibility_config, opt.output_format)

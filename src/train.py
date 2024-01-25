@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 import logging
 import matplotlib.pyplot as plt
 import numpy as np
@@ -66,11 +66,16 @@ def train(opt):
 
     logging.basicConfig(filename='%s/training.log' % opt.output_folder, filemode='a', level=logging.DEBUG, format='')
     logging.info("Scene Landmark Detector Training")
+    print('Start training ...')
+
     stats_pkl_logging = {'train': [], 'eval': []}
 
     device = opt.gpu_device
 
-    train_dataset = Indoor6(landmark_idx=-1,
+    assert len(opt.landmark_indices) == 0 or len(opt.landmark_indices) == 2, "landmark indices must be empty or length 2"
+
+    train_dataset = Indoor6(landmark_idx=np.arange(opt.landmark_indices[0],
+                                                   opt.landmark_indices[1]) if len(opt.landmark_indices) == 2 else [None],
                             scene_id=opt.scene_id,
                             mode='train',
                             root_folder=opt.dataset_folder,
@@ -81,8 +86,12 @@ def train(opt):
 
     train_dataloader = DataLoader(dataset=train_dataset, num_workers=4, batch_size=opt.training_batch_size, shuffle=True,
                                   pin_memory=True)
+    
+    ## Save the trained landmark configurations
+    np.savetxt(os.path.join(opt.output_folder, 'landmarks.txt'), train_dataset.landmark)
+    np.savetxt(os.path.join(opt.output_folder, 'visibility.txt'), train_dataset.visibility, fmt='%d')
 
-    num_landmarks = train_dataset.landmarks.shape[0]
+    num_landmarks = train_dataset.landmark.shape[1]
 
     if opt.model == 'efficientnet':
         cnn = EfficientNetSLD(num_landmarks=num_landmarks, output_downsample=opt.output_downsample).to(device=device)
@@ -192,20 +201,25 @@ def train_patches(opt):
 
     device = opt.gpu_device
 
-    train_dataset = Indoor6Patches(landmark_idx=-1,
-                                   scene_id=opt.scene_id,
-                                   mode='train',
-                                   root_folder=opt.dataset_folder,
-                                   input_image_downsample=2,
-                                   landmark_config=opt.landmark_config,
-                                   visibility_config=opt.visibility_config,
-                                   skip_image_index=1,
-                                   patch_size=int(24*opt.output_downsample))
+    assert len(opt.landmark_indices) == 0 or len(opt.landmark_indices) == 2, "landmark indices must be empty or length 2"
+    train_dataset = Indoor6Patches(landmark_idx=np.arange(opt.landmark_indices[0],
+                                                   opt.landmark_indices[1]) if len(opt.landmark_indices) == 2 else [None],
+                            scene_id=opt.scene_id,
+                            mode='train',
+                            root_folder=opt.dataset_folder,
+                            input_image_downsample=2,
+                            landmark_config=opt.landmark_config,
+                            visibility_config=opt.visibility_config,
+                            skip_image_index=1)
 
-    train_dataloader = DataLoader(dataset=train_dataset, num_workers=4, batch_size=opt.training_batch_size,
-                                  shuffle=True, pin_memory=True)
+    train_dataloader = DataLoader(dataset=train_dataset, num_workers=4, batch_size=opt.training_batch_size, shuffle=True,
+                                  pin_memory=True)
+    
+    ## Save the trained landmark configurations
+    np.savetxt(os.path.join(opt.output_folder, 'landmarks.txt'), train_dataset.landmark)
+    np.savetxt(os.path.join(opt.output_folder, 'visibility.txt'), train_dataset.visibility, fmt='%d')
 
-    num_landmarks = train_dataset.landmarks.shape[0]
+    num_landmarks = train_dataset.landmark.shape[1]
 
     if opt.model == 'efficientnet':
         cnn = EfficientNetSLD(num_landmarks=num_landmarks, output_downsample=opt.output_downsample).to(device=device)
@@ -219,6 +233,7 @@ def train_patches(opt):
         # Training
         training_loss = 0
         for idx, batch in enumerate(tqdm(train_dataloader)):
+            
             cnn.train()
 
             B1, B2, _, H, W = batch['patches'].shape
@@ -281,19 +296,22 @@ def train_patches(opt):
         if scheduler.get_last_lr()[-1] > 5e-5:
             scheduler.step()
 
-        opt.pretrained_model = path
+        opt.pretrained_model = [path]
         eval_stats = inference(opt, opt_tight_thr=1e-3, minimal_tight_thr=1e-3, mode='val')
 
         median_angular_error = np.median(eval_stats['angular_error'])
+        path = '%s/model-best_median.ckpt' % (opt.output_folder)
 
         if (median_angular_error < lowest_median_angular_error):
             lowest_median_angular_error = median_angular_error
-            path = '%s/model-best_median.ckpt' % (opt.output_folder)
+            torch.save(cnn.state_dict(), path)
+        
+        if (~os.path.exists(path) and len(eval_stats['angular_error']) == 0):
             torch.save(cnn.state_dict(), path)
 
         # date time
-        ts = datetime.datetime.now().timestamp()
-        dt = datetime.datetime.fromtimestamp(ts)
+        ts = datetime.now().timestamp()
+        dt = datetime.fromtimestamp(ts)
         datestring = dt.strftime("%Y-%m-%d_%H-%M-%S")
 
         # Print, log and update plot
@@ -304,22 +322,30 @@ def train_patches(opt):
              'recall': eval_stats['r5p5']
              })
 
-        str_log = 'epoch %3d: [%s] ' \
-                  'tr_loss= %10.2f, ' \
-                  'lowest_median= %8.4f deg. ' \
-                  'recall= %2.4f ' \
-                  'angular-err(deg.)= [%7.4f %7.4f %7.4f]  ' \
-                  'pixel-err= [%4.3f %4.3f %4.3f] [mean/med./min] ' % (epoch, datestring, training_loss,
-                                                                        lowest_median_angular_error,
-                                                                        eval_stats['r5p5'],
-                                                                        np.mean(eval_stats['angular_error']),
-                                                                        np.median(eval_stats['angular_error']),
-                                                                        np.min(eval_stats['angular_error']),
-                                                                        np.mean(eval_stats['pixel_error']),
-                                                                        np.median(eval_stats['pixel_error']),
-                                                                        np.min(eval_stats['pixel_error']))
-        print(str_log)
-        logging.info(str_log)
+
+        try:
+            str_log = 'epoch %3d: [%s] ' \
+                    'tr_loss= %10.2f, ' \
+                    'lowest_median= %8.4f deg. ' \
+                    'recall= %2.4f ' \
+                    'angular-err(deg.)= [%7.4f %7.4f %7.4f]  ' \
+                    'pixel-err= [%4.3f %4.3f %4.3f] [mean/med./min] ' % (epoch, datestring, training_loss,
+                                                                            lowest_median_angular_error,
+                                                                            eval_stats['r5p5'],
+                                                                            np.mean(eval_stats['angular_error']),
+                                                                            np.median(eval_stats['angular_error']),
+                                                                            np.min(eval_stats['angular_error']),
+                                                                            np.mean(eval_stats['pixel_error']),
+                                                                            np.median(eval_stats['pixel_error']),
+                                                                            np.min(eval_stats['pixel_error']))
+            print(str_log)
+            logging.info(str_log)
+        except ValueError:  #raised if array is empty.
+            str_log = 'epoch %3d: [%s] ' \
+                        'tr_loss= %10.2f, ' \
+                        'No correspondences found' % (epoch, datestring, training_loss)
+            print(str_log)
+            logging.info(str_log)
 
         with open('%s/stats.pkl' % opt.output_folder, 'wb') as f:
             pickle.dump(stats_pkl_logging, f)

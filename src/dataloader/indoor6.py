@@ -21,10 +21,11 @@ np.random.seed(0)
 class Indoor6(Dataset):
     def __init__(self, root_folder="",
                  scene_id='', mode='all',
-                 landmark_idx=-1, skip_image_index=1,
+                 landmark_idx=[None], skip_image_index=1,
                  input_image_downsample=1, gray_image_output=False,
                  landmark_config='landmarks/landmarks-50',
-                 visibility_config='landmarks/visibility-50'):
+                 visibility_config='landmarks/visibility-50',
+                 use_precomputed_focal_length=False):
         super(Indoor6, self).__init__()
 
         self.to_tensor = transforms.ToTensor()
@@ -69,20 +70,41 @@ class Indoor6(Dataset):
         landmark_file = open(root_folder + '/' + scene_id
                                          + '/%s.txt' % landmark_config, 'r')
         num_landmark = int(landmark_file.readline())
-        self.landmarks = []
+        self.landmark = []
         for l in range(num_landmark):
             pl = landmark_file.readline().split()
             pl = np.array([float(pl[i]) for i in range(len(pl))])
-            self.landmarks.append(pl)
-        self.landmarks = np.asarray(self.landmarks)[:, 1:]
+            self.landmark.append(pl)
+        self.landmark = np.asarray(self.landmark)[:, 1:]
 
         self.image_downsampled = input_image_downsample
 
         visibility_file = root_folder + '/' + scene_id + '/%s.txt' % visibility_config
         self.visibility = np.loadtxt(visibility_file).astype(bool)
-        self.landmark = self.landmarks.transpose()
+        
+        if landmark_idx[0] != None:
+            self.landmark = self.landmark[landmark_idx]
+            self.visibility = self.visibility[landmark_idx]
+        
+        self.landmark = self.landmark.transpose()
+        
+        ## Precomputed fixed focal length
+        self.precomputed_focal_length = None
+        if use_precomputed_focal_length:
+            PRECOMPUTED_FOCAL_LENGTH = {'scene1': 900, 'scene2a': 1100, 'scene3': 900, 'scene4a': 900, 'scene5': 900, 'scene6': 900}
+            self.precomputed_focal_length = PRECOMPUTED_FOCAL_LENGTH[scene_id]
 
-    def _modify_intrinsic(self, index):
+    
+    def original_image_name(self, index):
+        
+        intrinsics = open(os.path.join(self.image_folder,
+                                        self.image_files[index].replace('color.jpg', 'intrinsics.txt')))
+        intrinsics = intrinsics.readline().split()
+    
+        return intrinsics[6]
+
+    
+    def _modify_intrinsic(self, index, use_precomputed_focal_length=False):
         W = None
         H = None
         K = None
@@ -91,8 +113,7 @@ class Indoor6(Dataset):
         while K_inv is None:
             try:
                 intrinsics = open(os.path.join(self.image_folder,
-                                               self.image_files[index].replace('color.jpg', 'intrinsics.txt')))
-
+                                               self.image_files[index].replace('color.jpg', 'intrinsics.txt')))                
                 intrinsics = intrinsics.readline().split()
 
                 W = int(intrinsics[0]) // (self.image_downsampled * 32) * 32
@@ -101,8 +122,12 @@ class Indoor6(Dataset):
                 scale_factor_x = W / float(intrinsics[0])
                 scale_factor_y = H / float(intrinsics[1])
 
-                fx = float(intrinsics[2]) * scale_factor_x
-                fy = float(intrinsics[2]) * scale_factor_y
+                if use_precomputed_focal_length:                    
+                    fx = self.precomputed_focal_length * scale_factor_x
+                    fy = self.precomputed_focal_length * scale_factor_y
+                else:
+                    fx = float(intrinsics[2]) * scale_factor_x
+                    fy = float(intrinsics[2]) * scale_factor_y
 
                 cx = float(intrinsics[3]) * scale_factor_x
                 cy = float(intrinsics[4]) * scale_factor_y
@@ -145,7 +170,7 @@ class Indoor6(Dataset):
         return pose_s
 
     def __getitem__(self, index):
-        K, K_inv, W_modified, H_modified = self._modify_intrinsic(index)
+        K, K_inv, W_modified, H_modified = self._modify_intrinsic(index, use_precomputed_focal_length=False if self.precomputed_focal_length is None else True)
         color_tensor = self._load_and_resize_image(index, W_modified, H_modified)
         C_T_G = self._load_pose(index)
 
@@ -157,28 +182,27 @@ class Indoor6(Dataset):
                   'inv_intrinsics': torch.tensor(K_inv, dtype=torch.float32, requires_grad=False),
                   'landmark3d': torch.tensor(landmark3d[:3], dtype=torch.float32, requires_grad=False),
                   }
+        
+        proj = K @ (C_T_G[:3, :3] @ self.landmark + C_T_G[:3, 3:])
+        landmark2d = proj / proj[2:]
+        output['landmark2d'] = landmark2d[:2]
 
-        if self.mode == 'train':
-            proj = K @ (C_T_G[:3, :3] @ self.landmark + C_T_G[:3, 3:])
-            landmark2d = proj / proj[2:]
-            output['landmark2d'] = landmark2d[:2]
+        inside_patch = (landmark2d[0] < W_modified) * \
+                        (landmark2d[0] >= 0) * \
+                        (landmark2d[1] < H_modified) * \
+                        (landmark2d[1] >= 0)  # L vector
 
-            inside_patch = (landmark2d[0] < W_modified) * \
-                           (landmark2d[0] >= 0) * \
-                           (landmark2d[1] < H_modified) * \
-                           (landmark2d[1] >= 0)  # L vector
+        # visible by propagated colmap visibility and inside image
+        _mask1 = self.visibility[:, self.image_indices[index]] * inside_patch
 
-            # visible by propagated colmap visibility and inside image
-            _mask1 = self.visibility[:, self.image_indices[index]] * inside_patch
+        # outside patch
+        # _mask2 = ~inside_patch
 
-            # outside patch
-            # _mask2 = ~inside_patch
+        # inside image but not visible by colmap
+        _mask3 = (self.visibility[:, self.image_indices[index]] == 0) * inside_patch
 
-            # inside image but not visible by colmap
-            _mask3 = (self.visibility[:, self.image_indices[index]] == 0) * inside_patch
-
-            visibility_mask = 1.0 * _mask1 + 0.5 * _mask3
-            output['visibility'] = visibility_mask
+        visibility_mask = 1.0 * _mask1 + 0.5 * _mask3
+        output['visibility'] = visibility_mask
 
         return output
 
@@ -189,10 +213,10 @@ class Indoor6(Dataset):
 class Indoor6Patches(Indoor6):
     def __init__(self, root_folder="",
                  scene_id='', mode='all',
-                 landmark_idx=-1, skip_image_index=1,
+                 landmark_idx=[None], skip_image_index=1,
                  input_image_downsample=1, gray_image_output=False,
                  patch_size=96,
-                 positive_samples=8, random_samples=8,
+                 positive_samples=4, random_samples=4,
                  landmark_config='landmarks/landmarks-50',
                  visibility_config='landmarks/visibility-50',
                  augmentation=True):
@@ -282,12 +306,8 @@ class Indoor6Patches(Indoor6):
         landmark_visibility_on_patch = []
         L = self.landmark.shape[1]  # number of keypoints
 
-        list_landmarks = None
-        if self.landmark_idx == -1:
-            list_landmarks = np.random.permutation(L)[:self.positive_samples]
-        else:
-            list_landmarks = [self.landmark_idx]
-
+        list_landmarks = np.random.permutation(L)[:self.positive_samples]
+        
         ## Create positive examples
         for lm_idx in list_landmarks:
             ## Randomly draw image index from visibility mask
