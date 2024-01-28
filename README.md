@@ -10,7 +10,7 @@ cloud is shown only for visualization. It is not actually used for camera locali
 ---  
 
 ## Papers
-**Improved Scene Landmark Detection for Camera Localization**![new](media/new.png)  
+**Improved Scene Landmark Detection for Camera Localization**![new](media/New.png)  
 Tien Do and Sudipta N. Sinha  
 International Conference on 3D Vision (**3DV**), 2024  
 [pdf](paper/DoSinha3DV2024.pdf)  
