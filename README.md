@@ -67,7 +67,7 @@ Indoor-6 dataset SfM reconstructions. Train/val/test splits and download urls pe
 The two new scenes have been included as replacements. Please refer to our 3DV 2024 paper for a quantitative evaluation of our method and several baselines on the latest version of the dataset.
 
 # Source code
-The repository contains the latest source code and the best performing pretrained models for `SLD-star` as proposed in our 3DV 2024 paper. It significantly outperforms the `SLD+NBE` approach proposed in our CVPR 2022 paper. The source code for the `SLD+NBE` method is not maintained anymore.
+The repository contains all the source code for our project. The most recent version can be found in the `3dv24` git branch (which is now the default branch of the repository). The best performing pretrained models for `SLD-star` as proposed in our 3DV 2024 paper are also available (see below). It significantly outperforms the `SLD+NBE` approach proposed in our CVPR 2022 paper. The source code for the `SLD+NBE` method is not maintained anymore. The older version of the code (pre 3DV 2024) can be found in the `main` branch.
 
 ## Environment Setup
 ```
