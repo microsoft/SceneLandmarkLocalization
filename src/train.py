@@ -233,14 +233,24 @@ def train_patches(opt):
         # Training
         training_loss = 0
         for idx, batch in enumerate(tqdm(train_dataloader)):
-            
+
             cnn.train()
 
             B1, B2, _, H, W = batch['patches'].shape
             B = B1 * B2
-            patches = batch['patches'].reshape(B, 3, H, W).to(device=device)
-            visibility = batch['visibility'].reshape(B, num_landmarks).to(device=device)
-            landmark2d = batch['landmark2d'].reshape(B, 2, num_landmarks).to(device=device)
+            patches = batch['patches']
+            visibility = batch['visibility']
+            landmark2d = batch['landmark2d']
+
+            # highest supported precision for MPS is FP32
+            if device.lower() == 'mps':
+                patches = patches.float()
+                visibility = visibility.float()
+                landmark2d = landmark2d.float()
+
+            patches = patches.reshape(B, 3, H, W).to(device=device)
+            visibility = visibility.reshape(B, num_landmarks).to(device=device)
+            landmark2d = landmark2d.reshape(B, 2, num_landmarks).to(device=device)
 
             # Batch randomization
 

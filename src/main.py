@@ -2,6 +2,25 @@ import argparse
 from inference import *
 from train import *
 
+DEVICE = None
+# auto-detect default device
+if torch.backends.mps.is_available():
+    # Code to run on macOS
+    torch.backends.mps.enabled = True
+    DEVICE = "mps"
+    print ("MPS enabled")
+elif torch.cuda.is_available():
+    # Windows or Linux GPU acceleration
+    torch.backends.cudnn.enabled = True
+    torch.backends.cudnn.benchmark = True
+    DEVICE = "cuda"
+    print ("CUDA enabled")
+else:
+    # CPU
+    torch.backends.cudnn.enabled = False
+    DEVICE = "cpu"
+    print ("CPU enabled")
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Scene Landmark Detection',
@@ -32,7 +51,7 @@ if __name__ == '__main__':
         '--output_downsample', type=int, default=4,
         help='Down sampling factor for output resolution')
     parser.add_argument(
-        '--gpu_device', type=str, default='cuda:0',
+        '--gpu_device', type=str, default=DEVICE,
         help='GPU device')
     parser.add_argument(
         '--pretrained_model', type=str, action='append', default=[],
