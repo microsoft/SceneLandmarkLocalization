@@ -5,9 +5,11 @@ from tabnanny import check
 
 if __name__ == '__main__':
 
+    home_dir = os.path.expanduser("~")
+
     # Specify the paths to the dataset and the output folders.
-    dataset_dir = '../../data/indoor6'
-    output_dir = '../../data/outputs'
+    dataset_dir = os.path.join(home_dir, "data/indoor6")
+    output_dir = os.path.join(home_dir, "data/outputs")
 
     # Specify a version number which can be incremented when training multiple variants on 
     # the same scene.
@@ -65,7 +67,7 @@ if __name__ == '__main__':
         os.makedirs(model_dir, exist_ok=True)
 
         # Create the command line string for the training job.
-        cmd = 'python .\local_training.py'
+        cmd = 'python ./local_training.py'
         cmd += ' --dataset_dir %s' % dataset_dir
         cmd += ' --scene_id %s' % scene_name
         cmd += ' --experiment_file %s.txt' % experiment_name

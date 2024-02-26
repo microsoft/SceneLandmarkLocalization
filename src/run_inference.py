@@ -1,16 +1,19 @@
 import os
 import statistics as st
+import sys
+import torch
 
 if __name__ == '__main__':
 
+    home_dir = os.path.expanduser("~")
     # specify dataset path, location of checkpoints and the experiment name.
-    checkpoint_dir = '../../data/checkpoints'
-    dataset_dir = '../../data/indoor6'
+    checkpoint_dir = os.path.join(home_dir, 'data/checkpoints')
+    dataset_dir = os.path.join(home_dir, 'data/indoor6')
     experiment = '1000-125_v10'
 
     # run inference for all six scenes of the indoor6 dataset
     for scene_name in ['scene1', 'scene2a', 'scene3', 'scene4a', 'scene5', 'scene6']:
-        command = 'python .\local_inference.py --experiment_file %s_%s.txt --dataset_dir %s --checkpoint_dir %s' % (scene_name, experiment, dataset_dir, checkpoint_dir)
+        command = 'python ./local_inference.py --experiment_file %s_%s.txt --dataset_dir %s --checkpoint_dir %s' % (scene_name, experiment, dataset_dir, checkpoint_dir)
         os.system(command)
 
     # calculate metrics
@@ -19,7 +22,7 @@ if __name__ == '__main__':
     for scene_name in ['scene1', 'scene2a', 'scene3', 'scene4a', 'scene5', 'scene6']:
         subfolder = '%s_%s' % (scene_name, experiment)
         mfn = os.path.join(checkpoint_dir, subfolder, "metrics.txt")
-        mfd = open(mfn, 'r')      
+        mfd = open(mfn, 'r')
         idx = 0
         for line in mfd.readlines():
             if (idx % 2 == 0):
