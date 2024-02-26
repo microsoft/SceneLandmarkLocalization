@@ -80,7 +80,7 @@ pip install -r requirements.txt
 
 ## Layout
 
-The source code expects the following directory structure.
+The source code expects the following directory structure (currently in your home directory).
 
 ```
   └── data
