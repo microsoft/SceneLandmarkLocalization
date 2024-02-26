@@ -78,6 +78,16 @@ pip install -r requirements.txt
 * CUDA version: release 11.8 (V11.8.89)
 * PyTorch version: 2.1.0+cu118
 
+For development purposes, training was tested to run on both CUDA and CPU on both Linux and Windows platforms, as well as using the latest experimental version of pyTorch with Metal Performance Shaders on Mac OS X (see below).
+
+By default the code will select hardware acceleration for your device, if available.
+
+### Experimental Mac OS Metal Performance Shaders (MPS)
+
+To enable the MPS backend, make sure you are running the latest Apple Silicon compatible hardware and follow [these instructions](https://pytorch.org/blog/introducing-accelerated-pytorch-training-on-mac/) to get the latest Nightly build of pyTorch instead.
+
+_NOTE_: MPS has max supported precision of FP32.
+
 ## Layout
 
 The source code expects the following directory structure (currently in your home directory).

@@ -4,7 +4,7 @@ from train import *
 
 DEVICE = None
 # auto-detect default device
-if sys.platform == 'darwin':
+if torch.backends.mps.is_available():
     # Code to run on macOS
     torch.backends.mps.enabled = True
     DEVICE = "mps"
